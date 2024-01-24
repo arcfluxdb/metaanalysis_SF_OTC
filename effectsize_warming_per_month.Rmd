@@ -97,6 +97,9 @@ otc_effect_sizes <-
     data = monthly_otc # This is where the escalc function can find all the data for our meta-analysis
   )
 
+colnames(otc_effect_sizes) <- gsub("yi", "yi_otc",colnames(otc_effect_sizes))
+colnames(otc_effect_sizes) <- gsub("vi", "vi_otc",colnames(otc_effect_sizes))
+
 sf_effect_sizes <-
   escalc( # This is the function in metafor that allows us to calculate an effect size for each row in a database
     "SMD",
@@ -115,6 +118,9 @@ sf_effect_sizes <-
     # control site SD
     data = monthly_sf # This is where the escalc function can find all the data for our meta-analysis
   )
+
+colnames(sf_effect_sizes) <- gsub("yi", "yi_sf",colnames(sf_effect_sizes))
+colnames(sf_effect_sizes) <- gsub("vi", "vi_sf",colnames(sf_effect_sizes))
 
 otc_sf_effect_sizes <-
   escalc( # This is the function in metafor that allows us to calculate an effect size for each row in a database
@@ -135,8 +141,47 @@ otc_sf_effect_sizes <-
     data = monthly_otc_sf # This is where the escalc function can find all the data for our meta-analysis
   )
 
+colnames(otc_sf_effect_sizes) <- gsub("yi", "yi_otc_sf",colnames(otc_sf_effect_sizes))
+colnames(otc_sf_effect_sizes) <- gsub("vi", "vi_otc_sf",colnames(otc_sf_effect_sizes))
 
 
 
+```
+plotty 
+
+```{r }
+ggplot(otc_effect_sizes)+
+  geom_boxplot(aes(x=as.factor(month),y=yi_otc))
+```
+
+```{r }
+ggplot(sf_effect_sizes)+
+  geom_boxplot(aes(x=as.factor(month),y=yi_sf))
+```
+
+```{r}
+ggplot(otc_sf_effect_sizes)+
+  geom_boxplot(aes(x=as.factor(month),y=yi_otc_sf))
+```
+
+
+```{r}
+full_effect_size <- merge(otc_effect_sizes[,c(1,2,3,10,11)],
+                          sf_effect_sizes[,c(1,2,3,10,11)],
+                          by = c("site_id", "year", "month"),
+                          all = T)
+
+full_effect_size <- merge(full_effect_size ,
+                          otc_sf_effect_sizes[,c(1,2,3,10,11)],
+                          by = c("site_id", "year", "month"),
+                          all = T)
+
+```
+
+```{r}
+ggplot(full_effect_size)+
+  geom_boxplot(aes(x=as.factor(month),y=yi_otc_sf),fill="pink",alpha=0.8)+
+  geom_boxplot(aes(x=as.factor(month),y=yi_otc),fill="lightgreen",alpha=0.8)+
+  geom_boxplot(aes(x=as.factor(month),y=yi_sf),fill="lightblue",alpha=0.8)
 ```
 
