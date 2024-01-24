@@ -1,0 +1,142 @@
+---
+title: "effectsize_warming_year_round"
+author: "Jan"
+date: "2024-01-24"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+# 23.01.2024
+
+# Jan 
+
+source("data_cleaning.R")
+
+library(tidyverse)
+library(dplyr)
+library(lubridate)
+library(ggplot2)
+library(effsize)
+library(esc)
+library(metafor)
+
+str(full_data)
+
+working_data <- full_data %>% 
+  filter(treatment %in% c("CTL","OTC","SNOWFENCE","OTCxSNOWFENCE"))
+
+```
+
+
+
+```{r treatments}
+ggplot(working_data) +
+  geom_bar(aes(x=treatment,fill=site_id),stat = "count") + 
+  theme_classic()
+```
+
+## Including Plots
+
+You can also embed plots, for example:
+
+```{r months, echo=FALSE}
+working_data$month <- month(working_data$flux_date)
+
+ggplot(working_data) +
+  geom_bar(aes(x=treatment, fill=as.factor(month)),stat = "count") + 
+  theme_classic()
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+```{r preps}
+monthly <- working_data %>% 
+  group_by(site_id, year, month) %>% 
+  dplyr::summarise(n_ctl = sum(treatment == "CTL",na.rm=T),
+                   n_otc = sum(treatment == "OTC",na.rm=T),
+                   n_sf = sum(treatment == "SNOWFENCE",na.rm=T),
+                   n_otc_sf = sum(treatment == "OTCxSNOWFENCE",na.rm=T),
+                   m_ctl = mean(co2[treatment == "CTL"],na.rm=T),
+                   m_otc = mean(co2[treatment == "OTC"],na.rm=T),
+                   m_sf = mean(co2[treatment == "SNOWFENCE"],na.rm=T),
+                   m_otc_sf = mean(co2[treatment == "OTCxSNOWFENCE"],na.rm=T),
+                   s_ctl = mean(co2[treatment == "CTL"],na.rm=T),
+                   s_otc = mean(co2[treatment == "OTC"],na.rm=T),
+                   s_sf = mean(co2[treatment == "SNOWFENCE"],na.rm=T),
+                   s_otc_sf = mean(co2[treatment == "OTCxSNOWFENCE"],na.rm=T))
+
+monthly_otc <- monthly %>% filter(!is.na(m_otc))
+monthly_otc <- monthly_otc[,-c(grep("sf",colnames(monthly_otc)))]
+
+monthly_sf <- monthly %>% filter(!is.na(m_sf))
+monthly_sf <- monthly_sf[,-c(grep("otc",colnames(monthly_sf)))]
+
+monthly_otc_sf <- monthly %>% filter(!is.na(m_otc_sf))
+monthly_otc_sf <- monthly_otc_sf[,c(1,2,3,c(grep("ctl|otc_sf",colnames(monthly_otc_sf))))]
+
+
+```
+lets go 
+```{r effectsize calc}
+otc_effect_sizes <-
+  escalc( # This is the function in metafor that allows us to calculate an effect size for each row in a database
+    "SMD",
+    # Specify the effect size we want to calculate. In this case SMD for Standardized mean difference
+    m1i = m_otc,
+    # mean richness at invaded sites
+    n1i = n_otc,
+    # invaded site sample size
+    sd1i = s_otc,
+    # invaded site SD
+    m2i = m_ctl,
+    # mean richness at control sites
+    n2i = n_ctl,
+    # control site sample size
+    sd2i = s_ctl,
+    # control site SD
+    data = monthly_otc # This is where the escalc function can find all the data for our meta-analysis
+  )
+
+sf_effect_sizes <-
+  escalc( # This is the function in metafor that allows us to calculate an effect size for each row in a database
+    "SMD",
+    # Specify the effect size we want to calculate. In this case SMD for Standardized mean difference
+    m1i = m_sf,
+    # mean richness at invaded sites
+    n1i = n_sf,
+    # invaded site sample size
+    sd1i = s_sf,
+    # invaded site SD
+    m2i = m_ctl,
+    # mean richness at control sites
+    n2i = n_ctl,
+    # control site sample size
+    sd2i = s_ctl,
+    # control site SD
+    data = monthly_sf # This is where the escalc function can find all the data for our meta-analysis
+  )
+
+otc_sf_effect_sizes <-
+  escalc( # This is the function in metafor that allows us to calculate an effect size for each row in a database
+    "SMD",
+    # Specify the effect size we want to calculate. In this case SMD for Standardized mean difference
+    m1i = m_otc_sf,
+    # mean richness at invaded sites
+    n1i = n_otc_sf,
+    # invaded site sample size
+    sd1i = s_otc_sf,
+    # invaded site SD
+    m2i = m_ctl,
+    # mean richness at control sites
+    n2i = n_ctl,
+    # control site sample size
+    sd2i = s_ctl,
+    # control site SD
+    data = monthly_otc_sf # This is where the escalc function can find all the data for our meta-analysis
+  )
+
+
+
+
+```
+
