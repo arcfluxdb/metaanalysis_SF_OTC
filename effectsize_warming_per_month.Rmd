@@ -20,6 +20,7 @@ library(ggplot2)
 library(effsize)
 library(esc)
 library(metafor)
+library(lme4)
 
 str(full_data)
 
@@ -151,17 +152,23 @@ plotty
 
 ```{r }
 ggplot(otc_effect_sizes)+
-  geom_boxplot(aes(x=as.factor(month),y=yi_otc))
+  geom_boxplot(aes(x=as.factor(month),y=yi_otc),varwidth = TRUE)+
+  geom_smooth(aes(x=month,y=yi_otc,color=year),method = "lm", se=F)
+
+otc_model <- lmer(yi_otc ~ month + (1|site_id) + (1|year), 
+              weights = 1 / vi_otc^2,
+              data = otc_effect_sizes)
+summary(otc_model)
 ```
 
 ```{r }
 ggplot(sf_effect_sizes)+
-  geom_boxplot(aes(x=as.factor(month),y=yi_sf))
+  geom_boxplot(aes(x=as.factor(month),y=yi_sf),varwidth = TRUE)
 ```
 
 ```{r}
 ggplot(otc_sf_effect_sizes)+
-  geom_boxplot(aes(x=as.factor(month),y=yi_otc_sf))
+  geom_boxplot(aes(x=as.factor(month),y=yi_otc_sf),varwidth = T)
 ```
 
 
@@ -176,12 +183,20 @@ full_effect_size <- merge(full_effect_size ,
                           by = c("site_id", "year", "month"),
                           all = T)
 
+stacked_effect <- full_effect_size %>% 
+  gather(treatment, effectsize, yi_otc,yi_sf,yi_otc_sf)
+
 ```
 
 ```{r}
 ggplot(full_effect_size)+
-  geom_boxplot(aes(x=as.factor(month),y=yi_otc_sf),fill="pink",alpha=0.8)+
-  geom_boxplot(aes(x=as.factor(month),y=yi_otc),fill="lightgreen",alpha=0.8)+
-  geom_boxplot(aes(x=as.factor(month),y=yi_sf),fill="lightblue",alpha=0.8)
+  geom_boxplot(aes(x=as.factor(month),y=yi_otc_sf),fill="red",alpha=0.8, varwidth = T)+
+  geom_boxplot(aes(x=as.factor(month),y=yi_otc),fill="lightgreen",alpha=0.8, varwidth = T)+
+  geom_boxplot(aes(x=as.factor(month),y=yi_sf),fill="lightblue",alpha=0.8, varwidth = T)
+```
+
+```{r}
+ggplot(stacked_effect)+
+  geom_boxplot(aes(x=as.factor(month), y = effectsize, fill = treatment),varwidth = TRUE)
 ```
 
