@@ -197,6 +197,31 @@ ggplot(full_effect_size)+
 
 ```{r}
 ggplot(stacked_effect)+
-  geom_boxplot(aes(x=as.factor(month), y = effectsize, fill = treatment),varwidth = TRUE)
+  geom_boxplot(aes(x=as.factor(month), y = effectsize, fill = treatment), alpha = 0.5)+
+  geom_smooth(aes(x=month,y = effectsize, color=treatment), method = "lm", se = F)+
+  theme_classic()
+```
+
+```{r}
+
+duration <- full_data[,grep("site_id|(?<!_)year|er_duration",colnames(full_data),value = TRUE, perl = TRUE)]
+
+stacked_effect_length <- distinct(merge(stacked_effect,
+                        duration,
+                        by = c("site_id","year"),
+                        all = T))
+```
+
+```{r}
+stacked_effect_length$duration <- ifelse(stacked_effect_length$er_duration_method <= 5, "0-5",
+                                         ifelse(stacked_effect_length$er_duration_method <= 10, "6-10",
+                                                ifelse(stacked_effect_length$er_duration_method <= 15, "11-15",
+                                                       "16-20")))
+                                         
+
+ggplot(stacked_effect_length)+
+  geom_boxplot(aes(x=as.factor(month), y = effectsize, fill = treatment), alpha = 0.5)+
+  facet_wrap(~duration)+
+  theme_classic()
 ```
 
