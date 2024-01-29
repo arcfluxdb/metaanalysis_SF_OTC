@@ -13,20 +13,17 @@ knitr::opts_chunk$set(echo = TRUE)
 
 source("data_cleaning.R") # get up-to date dataset
 
-library(tidyverse)
-library(dplyr)
-library(lubridate)
-library(ggplot2)
-library(effsize)
-library(esc)
-library(metafor)
-library(lme4)
-
 str(full_data)
 
 working_data <- full_data %>% 
   filter(treatment %in% c("CTL","OTC","SNOWFENCE","OTCxSNOWFENCE"))
 
+working_data$month <- month(working_data$flux_date)
+
+working_data$monthseason <- ifelse(working_data$month <= 3,"NGS",
+                                   ifelse(working_data$month <= 5, "Shoulder",
+                                          ifelse(working_data$month <= 9, "GS",
+                                                 ifelse(working_data$month <= 11, "Shoulder", "NGS"))))
 ```
 
 
@@ -42,12 +39,18 @@ ggplot(working_data) +
 You can also embed plots, for example:
 
 ```{r months, echo=FALSE}
-working_data$month <- month(working_data$flux_date)
-
 ggplot(working_data) +
-  geom_bar(aes(x=treatment, fill=as.factor(month)),stat = "count") + 
+  geom_bar(aes(x=month, fill = treatment),stat = "count") + 
   theme_classic()
 ```
+
+```{r}
+working_data %>% 
+  group_by(site_id, year) %>% 
+  dplyr::summarise(treatment = paste(unique(treatment), collapse = ", ")) %>% 
+  view()
+```
+
 
 Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
 ```{r preps}
