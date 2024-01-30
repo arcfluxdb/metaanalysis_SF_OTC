@@ -1,33 +1,165 @@
 ---
 title: "table_with_effectsizes"
-author: "Jan"
+author: "Sarah"
 date: "2024-01-26"
 output: html_document
 ---
 
+# set up and load in data
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
+# 30.01.2024
+
+# Sarah
+
+source("data_cleaning.R") # get up-to date dataset
+
+str(full_data)
+
+#filter treatments we are interested in
+working_data <- full_data %>% 
+  filter(treatment %in% c("CTL","OTC","SNOWFENCE","OTCxSNOWFENCE"))
+
+working_data$month <- month(working_data$flux_date)
+
+working_data$monthseason <- ifelse(working_data$month <= 3,"NGS",
+                                   ifelse(working_data$month <= 5, "Shoulder",
+                                          ifelse(working_data$month <= 9, "GS",
+                                                 ifelse(working_data$month <= 11, "Shoulder", "NGS"))))
+```
+
+```{r preps}
+monthly <- working_data %>% 
+  group_by(site_id, year, month) %>% 
+  dplyr::summarise(n_ctl = sum(treatment == "CTL",na.rm=T),
+                   n_otc = sum(treatment == "OTC",na.rm=T),
+                   n_sf = sum(treatment == "SNOWFENCE",na.rm=T),
+                   n_otc_sf = sum(treatment == "OTCxSNOWFENCE",na.rm=T),
+                   mean_ctl = mean(co2[treatment == "CTL"],na.rm=T),
+                   mean_otc = mean(co2[treatment == "OTC"],na.rm=T),
+                   mean_sf = mean(co2[treatment == "SNOWFENCE"],na.rm=T),
+                   mean_otc_sf = mean(co2[treatment == "OTCxSNOWFENCE"],na.rm=T),
+                   sd_ctl = sd(co2[treatment == "CTL"],na.rm=T),
+                   sd_otc = sd(co2[treatment == "OTC"],na.rm=T),
+                   sd_sf = sd(co2[treatment == "SNOWFENCE"],na.rm=T),
+                   sd_otc_sf = sd(co2[treatment == "OTCxSNOWFENCE"],na.rm=T))
+
+monthly_otc <- monthly %>% filter(!is.na(mean_otc))
+monthly_otc <- monthly_otc[,-c(grep("sf",colnames(monthly_otc)))]
+
+monthly_sf <- monthly %>% filter(!is.na(mean_sf))
+monthly_sf <- monthly_sf[,-c(grep("otc",colnames(monthly_sf)))]
+
+monthly_otc_sf <- monthly %>% filter(!is.na(mean_otc_sf))
+monthly_otc_sf <- monthly_otc_sf[,c(1,2,3,c(grep("ctl|otc_sf",colnames(monthly_otc_sf))))]
+```
+lets go 
+```{r effectsize calc}
+otc_effect_sizes <-
+  escalc( # This is the function in metafor that allows us to calculate an effect size for each row in a database
+    "SMD",
+    # Specify the effect size we want to calculate. In this case SMD for Standardized mean difference
+    m1i = mean_otc,
+    # mean richness at invaded sites
+    n1i = n_otc,
+    # invaded site sample size
+    sd1i = sd_otc,
+    # invaded site SD
+    m2i = mean_ctl,
+    # mean richness at control sites
+    n2i = n_ctl,
+    # control site sample size
+    sd2i = sd_ctl,
+    # control site SD
+    data = monthly_otc # This is where the escalc function can find all the data for our meta-analysis
+  )
+
+colnames(otc_effect_sizes) <- gsub("yi", "yi_otc",colnames(otc_effect_sizes))
+colnames(otc_effect_sizes) <- gsub("vi", "vi_otc",colnames(otc_effect_sizes))
+
+sf_effect_sizes <-
+  escalc( # This is the function in metafor that allows us to calculate an effect size for each row in a database
+    "SMD",
+    # Specify the effect size we want to calculate. In this case SMD for Standardized mean difference
+    m1i = mean_sf,
+    # mean richness at invaded sites
+    n1i = n_sf,
+    # invaded site sample size
+    sd1i = sd_sf,
+    # invaded site SD
+    m2i = mean_ctl,
+    # mean richness at control sites
+    n2i = n_ctl,
+    # control site sample size
+    sd2i = sd_ctl,
+    # control site SD
+    data = monthly_sf # This is where the escalc function can find all the data for our meta-analysis
+  )
+
+colnames(sf_effect_sizes) <- gsub("yi", "yi_sf",colnames(sf_effect_sizes))
+colnames(sf_effect_sizes) <- gsub("vi", "vi_sf",colnames(sf_effect_sizes))
+
+otc_sf_effect_sizes <-
+  escalc( # This is the function in metafor that allows us to calculate an effect size for each row in a database
+    "SMD",
+    # Specify the effect size we want to calculate. In this case SMD for Standardized mean difference
+    m1i = mean_otc_sf,
+    # mean richness at invaded sites
+    n1i = n_otc_sf,
+    # invaded site sample size
+    sd1i = sd_otc_sf,
+    # invaded site SD
+    m2i = mean_ctl,
+    # mean richness at control sites
+    n2i = n_ctl,
+    # control site sample size
+    sd2i = sd_ctl,
+    # control site SD
+    data = monthly_otc_sf # This is where the escalc function can find all the data for our meta-analysis
+  )
+
+colnames(otc_sf_effect_sizes) <- gsub("yi", "yi_otc_sf",colnames(otc_sf_effect_sizes))
+colnames(otc_sf_effect_sizes) <- gsub("vi", "vi_otc_sf",colnames(otc_sf_effect_sizes))
+```
+
+# run multivariate effects model
+#OTC
+```{r OTC}
+#total
+OTC_total <- rma.mv(yi_otc, vi_otc, 
+                random=list(~ 1 |  site_id_automatic / n_OTC_hr, 
+                            ~ flux_year_automatic |  site_id_automatic ), 
+                struct="CAR", 
+                data=monthly_otc)
+summary(model)
+predict(model)
+#GS
+#NGS
+#Shoulder
+
+str(monthly_otc)
 
 ```
 
-blabvlalbva
-
-## R Markdown
-
-This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
-
-When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
-
-```{r cars}
-summary(cars)
+#OTC
+```{r}
+model <- rma.mv(SMD_HR, var_SMD_HR, 
+                random=list(~ 1 |  site_id_automatic / n_OTC_hr, 
+                            ~ flux_year_automatic |  site_id_automatic ), 
+                struct="CAR", 
+                data=df_meta)
+summary(model)
+predict(model)
 ```
 
-## Including Plots
-
-You can also embed plots, for example:
-
-```{r pressure, echo=FALSE}
-plot(pressure)
+#OTC
+```{r}
+model <- rma.mv(SMD_HR, var_SMD_HR, 
+                random=list(~ 1 |  site_id_automatic / n_OTC_hr, 
+                            ~ flux_year_automatic |  site_id_automatic ), 
+                struct="CAR", 
+                data=df_meta)
+summary(model)
+predict(model)
 ```
 
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
