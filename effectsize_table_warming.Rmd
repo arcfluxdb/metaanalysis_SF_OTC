@@ -128,7 +128,7 @@ colnames(otc_sf_effect_sizes) <- gsub("vi", "vi_otc_sf",colnames(otc_sf_effect_s
 #total
 OTC_total <- rma.mv(yi_otc, vi_otc, 
                 random=list(~ 1 |  site_id_automatic / n_OTC_hr, 
-                            ~ flux_year_automatic |  site_id_automatic ), 
+                            ~ flux_year_automatic |  site_id_automatic ), #~1|site_id/n_otc, ~year|site_id
                 struct="CAR", 
                 data=monthly_otc)
 summary(model)
