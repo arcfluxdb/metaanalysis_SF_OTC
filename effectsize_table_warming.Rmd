@@ -30,7 +30,7 @@ working_data$monthseason <- ifelse(working_data$month <= 3,"NGS",
 
 ```{r preps}
 monthly <- working_data %>% 
-  group_by(site_id, year, month) %>% 
+  group_by(site_id, year, monthseason) %>% 
   dplyr::summarise(n_ctl = sum(treatment == "CTL",na.rm=T),
                    n_otc = sum(treatment == "OTC",na.rm=T),
                    n_sf = sum(treatment == "SNOWFENCE",na.rm=T),
@@ -123,43 +123,136 @@ colnames(otc_sf_effect_sizes) <- gsub("vi", "vi_otc_sf",colnames(otc_sf_effect_s
 ```
 
 # run multivariate effects model
+#SF
+```{r SF}
+#total
+SF_total <- rma.mv(yi_sf, vi_sf, 
+                random=list(~ 1 | site_id, 
+                            ~ year | site_id), 
+                struct="CAR", 
+                data=sf_effect_sizes)
+summary(SF_total)
+forest(SF_total)
+predict(SF_total)
+#GS
+SF_GS <- rma.mv(yi_sf, vi_sf, 
+                random=list(~ 1 | site_id, 
+                            ~ year | site_id), 
+                struct="CAR", 
+                data=subset(sf_effect_sizes, monthseason=="GS",)
+)
+
+forest(SF_GS)
+summary(SF_GS)
+predict(SF_GS)
+#NGS
+SF_NGS <- rma.mv(yi_sf, vi_sf,
+                random=list(~ 1 | site_id, 
+                            ~ year | site_id), 
+                struct="CAR", 
+                data=subset(sf_effect_sizes, monthseason=="NGS",)
+)
+summary(SF_NGS)
+predict(SF_NGS)
+#Shoulder
+SF_sh <- rma.mv(yi_sf, vi_sf, 
+                random=list(~ 1 | site_id, 
+                            ~ year | site_id), 
+                struct="CAR", 
+                data=subset(sf_effect_sizes, monthseason=="Shoulder",)
+)
+summary(SF_sh)
+forest(SF_sh)
+predict(SF_sh)
+
+```
+
 #OTC
-```{r OTC}
+```{r  OTC}
 #total
 OTC_total <- rma.mv(yi_otc, vi_otc, 
-                random=list(~ 1 |  site_id_automatic / n_OTC_hr, 
-                            ~ flux_year_automatic |  site_id_automatic ), #~1|site_id/n_otc, ~year|site_id
+                random=list(~ 1 | site_id, 
+                            ~ year | site_id), 
                 struct="CAR", 
-                data=monthly_otc)
-summary(model)
-predict(model)
+                data=otc_effect_sizes)
+summary(OTC_total)
+forest(OTC_total)
+predict(OTC_total)
 #GS
+OTC_GS <- rma.mv(yi_otc, vi_otc, 
+                random=list(~ 1 | site_id, 
+                            ~ year | site_id), 
+                struct="CAR", 
+                data=subset(otc_effect_sizes, monthseason=="GS",)
+)
+
+forest(OTC_GS)
+summary(OTC_GS)
+predict(OTC_GS)
 #NGS
+OTC_NGS <- rma.mv(yi_otc, vi_otc, 
+                random=list(~ 1 | site_id, 
+                            ~ year | site_id), 
+                struct="CAR", 
+                data=subset(otc_effect_sizes, monthseason=="NGS",)
+)
+summary(OTC_NGS)
+predict(OTC_NGS)
 #Shoulder
-
-str(monthly_otc)
+OTC_sh <- rma.mv(yi_otc, vi_otc, 
+                random=list(~ 1 | site_id, 
+                            ~ year | site_id), 
+                struct="CAR", 
+                data=subset(otc_effect_sizes, monthseason=="Shoulder",)
+)
+summary(OTC_sh)
+forest(OTC_sh)
+predict(OTC_sh)
 
 ```
 
-#OTC
-```{r}
-model <- rma.mv(SMD_HR, var_SMD_HR, 
-                random=list(~ 1 |  site_id_automatic / n_OTC_hr, 
-                            ~ flux_year_automatic |  site_id_automatic ), 
-                struct="CAR", 
-                data=df_meta)
-summary(model)
-predict(model)
-```
+#SFxOTC
+```{r SFxOTC}
 
-#OTC
-```{r}
-model <- rma.mv(SMD_HR, var_SMD_HR, 
-                random=list(~ 1 |  site_id_automatic / n_OTC_hr, 
-                            ~ flux_year_automatic |  site_id_automatic ), 
+#total
+OTC_SF_total <- rma.mv(yi_otc_sf, vi_otc_sf, 
+                random=list(~ 1 | site_id, 
+                            ~ year | site_id), 
                 struct="CAR", 
-                data=df_meta)
-summary(model)
-predict(model)
+                data=otc_sf_effect_sizes)
+summary(OTC_SF_total)
+forest(OTC_SF_total)
+predict(OTC_SF_total)
+#GS
+OTC_SF_GS <- rma.mv(yi_otc_sf, vi_otc_sf,  
+                random=list(~ 1 | site_id, 
+                            ~ year | site_id), 
+                struct="CAR", 
+                data=subset(otc_sf_effect_sizes, monthseason=="GS",)
+)
+
+forest(OTC_SF_GS)
+summary(OTC_SF_GS)
+predict(OTC_SF_GS)
+#NGS
+OTC_SF_NGS <- rma.mv(yi_otc_sf, vi_otc_sf, 
+                random=list(~ 1 | site_id, 
+                            ~ year | site_id), 
+                struct="CAR", 
+                data=subset(otc_sf_effect_sizes, monthseason=="NGS",)
+)
+summary(OTC_SF_NGS)
+predict(OTC_SF_NGS)
+#Shoulder
+OTC_SF_sh <- rma.mv(yi_otc_sf, vi_otc_sf,  
+                random=list(~ 1 | site_id, 
+                            ~ year | site_id), 
+                struct="CAR", 
+                data=subset(otc_sf_effect_sizes, monthseason=="Shoulder",)
+)
+summary(OTC_SF_sh)
+forest(OTC_SF_sh)
+predict(OTC_SF_sh)
+
 ```
 
