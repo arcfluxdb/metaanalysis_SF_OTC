@@ -3,8 +3,7 @@
 
 library(readr)
 library(tidyverse)
-<<<<<<< HEAD
-=======
+
 
 library(dplyr)
 library(lubridate)
@@ -13,8 +12,6 @@ library(effsize)
 library(esc)
 library(metafor)
 library(lme4)
->>>>>>> 45ddc6b09afa3dbbe20854a2c5260a737beb8235
-
 library(dplyr)
 library(lubridate)
 library(ggplot2)
