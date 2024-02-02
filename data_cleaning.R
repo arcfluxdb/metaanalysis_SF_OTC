@@ -17,7 +17,7 @@ library(lme4)
 full_data_wrong_units <- read_csv("full_data_wrong_units.csv", 
                                   col_types = cols(...1 = col_skip(), flux_date = col_date(format = "%d/%m/%Y")))
 
-all_data <- readRDS(file = "flux_db_FULL_230823.rds")
+all_data_230823 <- readRDS(file = "flux_db_FULL_230823.rds")
 
 # change date column
 
