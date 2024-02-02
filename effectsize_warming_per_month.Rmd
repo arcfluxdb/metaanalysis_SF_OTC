@@ -5,6 +5,8 @@ date: "2024-01-24"
 output: pdf_document
 ---
 
+
+
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 # 23.01.2024
