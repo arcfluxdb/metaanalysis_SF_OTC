@@ -11,22 +11,24 @@ knitr::opts_chunk$set(echo = TRUE)
 
 # Jan 
 
-source("data_cleaning.R")
-
-library(tidyverse)
-library(dplyr)
-library(lubridate)
-library(ggplot2)
-library(effsize)
-library(esc)
-library(metafor)
-library(lme4)
+source("data_cleaning.R") # get up-to date dataset
 
 str(full_data)
 
-working_data <- full_data %>% 
-  filter(treatment %in% c("CTL","OTC","SNOWFENCE","OTCxSNOWFENCE"))
+working_data <- all_dates %>% 
+  filter(treatment %in% c("CTL","OTC","SNOWFENCE","OTCxSNOWFENCE")) %>% 
+  filter(site_id != "AUS_1")
 
+
+working_data$month <- month(working_data$flux_date)
+
+
+
+
+working_data$monthseason <- ifelse(working_data$month <= 3,"NGS",
+                                   ifelse(working_data$month <= 5, "Shoulder",
+                                          ifelse(working_data$month <= 9, "GS",
+                                                 ifelse(working_data$month <= 11, "Shoulder", "NGS"))))
 ```
 
 
@@ -37,17 +39,39 @@ ggplot(working_data) +
   theme_classic()
 ```
 
-## Including Plots
-
-You can also embed plots, for example:
 
 ```{r months, echo=FALSE}
-working_data$month <- month(working_data$flux_date)
-
 ggplot(working_data) +
-  geom_bar(aes(x=treatment, fill=as.factor(month)),stat = "count") + 
+  geom_bar(aes(x=month, fill = site_id),stat = "count") + 
+  facet_wrap(~monthseason,scales="free")+
+  theme_classic()
+
+plotdata <- working_data %>% 
+  group_by(site_id, year,month,treatment) %>% 
+  dplyr::summarise(n=n())
+ggplot(plotdata) +
+  geom_bar(aes(x=month, fill = site_id),stat = "count") + 
+  facet_wrap(~treatment,scales="free")+
   theme_classic()
 ```
+ first up splittinf the data into the different treatments
+```{r}
+working_data %>% 
+  group_by(site_id, year) %>% 
+  dplyr::summarise(treatment = paste(unique(treatment), collapse = ", ")) %>% 
+  view()
+
+working_data %>% 
+  group_by(site_id, year) %>% 
+  dplyr::summarise(ctl = sum(treatment == "CTL",na.rm=T),
+                   otc = sum(treatment == "OTC",na.rm=T),
+                   sf = sum(treatment == "SNOWFENCE",na.rm=T),
+                   otc_sf = sum(treatment == "OTCxSNOWFENCE",na.rm=T)
+                   ) %>% 
+  view()
+
+```
+
 
 Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
 ```{r preps}
@@ -153,7 +177,9 @@ plotty
 ```{r }
 ggplot(otc_effect_sizes)+
   geom_boxplot(aes(x=as.factor(month),y=yi_otc),varwidth = TRUE)+
-  geom_smooth(aes(x=month,y=yi_otc,color=year),method = "lm", se=F)
+  geom_smooth(aes(x=month,y=yi_otc),method = "lm", se=F)+
+  geom_jitter(aes(x=as.factor(month),y=yi_otc,color=site_id),width = 0.1)+
+  theme_minimal()
 
 otc_model <- lmer(yi_otc ~ month + (1|site_id) + (1|year), 
               weights = 1 / vi_otc^2,
@@ -163,12 +189,18 @@ summary(otc_model)
 
 ```{r }
 ggplot(sf_effect_sizes)+
-  geom_boxplot(aes(x=as.factor(month),y=yi_sf),varwidth = TRUE)
+  geom_boxplot(aes(x=as.factor(month),y=yi_sf),varwidth = TRUE)+
+  geom_smooth(aes(x=month,y=yi_sf),method = "lm", se=F)+
+  geom_jitter(aes(x=as.factor(month),y=yi_sf,color=site_id),width = 0.1)+
+  theme_minimal()
 ```
 
 ```{r}
 ggplot(otc_sf_effect_sizes)+
-  geom_boxplot(aes(x=as.factor(month),y=yi_otc_sf),varwidth = T)
+  geom_boxplot(aes(x=as.factor(month),y=yi_otc_sf),varwidth = T)+
+  geom_smooth(aes(x=month,y=yi_otc_sf),method = "lm", se=F)+
+  geom_jitter(aes(x=as.factor(month),y=yi_otc_sf,color=site_id),width = 0.1)+
+  theme_minimal()
 ```
 
 
@@ -202,6 +234,14 @@ ggplot(full_effect_size)+
 ggplot(stacked_effect)+
   geom_boxplot(aes(x=as.factor(month), y = effectsize, fill = treatment), alpha = 0.5)+
   geom_smooth(aes(x=month,y = effectsize, color=treatment), method = "lm", se = F)+
+  geom_jitter(aes(x=as.factor(month),y=effectsize,color=site_id),width = 0.1)+
+  theme_classic()
+
+
+ggplot(stacked_effect, aes(x = as.factor(month), y = effectsize, fill = treatment)) +
+  geom_boxplot(alpha = 0.5) +
+  geom_smooth(aes(color = treatment), method = "lm", se = FALSE) +
+  #geom_jitter(aes(color = site_id), position = position_jitterdodge()) +
   theme_classic()
 ```
 
@@ -226,5 +266,10 @@ ggplot(stacked_effect_length)+
   geom_boxplot(aes(x=as.factor(month), y = effectsize, fill = treatment), alpha = 0.5)+
   facet_wrap(~duration)+
   theme_classic()
+```
+```{r}
+
+View(working_data[working_data$month == 1,])
+
 ```
 
