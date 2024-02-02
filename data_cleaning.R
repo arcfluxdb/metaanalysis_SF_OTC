@@ -18,7 +18,6 @@ library(lme4)
 #                                  col_types = cols(...1 = col_skip(), flux_date = col_date(format = "%d/%m/%Y")))
 
 
-
 all_data_230823 <- readRDS(file = "flux_db_FULL_230823.rds")
 
 working_data <- all_data_230823 %>% 
@@ -26,6 +25,10 @@ working_data <- all_data_230823 %>%
   filter(site_id != "AUS_1")  
   
 working_data$site_id <- recode(working_data$site_id, "Toolik MAT SF" = "ALA_13")
+
+working_data <- working_data %>%
+    mutate(flux_date = parse_date_time(flux_date, orders = c("ymd", "mdy", "dmy")))
+
 
 rm(all_data_230823)
 
