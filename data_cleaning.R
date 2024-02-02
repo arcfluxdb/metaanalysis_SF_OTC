@@ -21,7 +21,8 @@ library(lme4)
 all_data_230823 <- readRDS(file = "flux_db_FULL_230823.rds")
 
 working_data <- all_data_230823 %>% 
-  filter(treatment %in% c("CTL","OTC","SNOWFENCE","OTCxSNOWFENCE")) %>% 
+  filter(!is.na(co2)) %>% 
+  filter(treatment %in% c("CTL", "OTC","SNOWFENCE","OTCxSNOWFENCE")) %>% 
   filter(site_id != "AUS_1")  
   
 working_data$site_id <- recode(working_data$site_id, "Toolik MAT SF" = "ALA_13")
