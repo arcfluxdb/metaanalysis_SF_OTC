@@ -15,12 +15,6 @@ knitr::opts_chunk$set(echo = TRUE)
 
 source("data_cleaning.R") # get up-to date dataset
 
-str(full_data)
-
-
-
-
-
 working_data$month <- month(working_data$flux_date)
 
 
@@ -57,9 +51,7 @@ plotdata <- working_data %>%
   dplyr::summarise(n=n())
 ggplot(plotdata) +
   geom_bar(aes(x=month, fill = site_id),stat = "count") + 
-  facet_wrap(~treatment,scales="free")+
-
-  geom_bar(aes(x=month, fill = treatment),stat = "count") + 
+  facet_wrap(~treatment,scales="free")+ 
 
   theme_classic()
 ```
@@ -70,7 +62,8 @@ working_data %>%
   dplyr::summarise(treatment = paste(unique(treatment), collapse = ", ")) %>% 
   view()
 
-working_data %>% 
+working_data %>%  
+  filter(!is.na(co2)) %>% 
   group_by(site_id, year) %>% 
   dplyr::summarise(ctl = sum(treatment == "CTL",na.rm=T),
                    otc = sum(treatment == "OTC",na.rm=T),
@@ -84,7 +77,7 @@ working_data %>%
 
 ```{r}
 working_data %>% 
-  group_by(site_id, year) %>% 
+  group_by(site_id, year,month) %>% 
   dplyr::summarise(treatment = paste(unique(treatment), collapse = ", ")) %>% 
   view()
 ```
@@ -92,8 +85,8 @@ working_data %>%
 
 Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
 ```{r preps}
-monthly <- working_data %>% 
-  group_by(site_id, year, month) %>% 
+monthly <- working_data %>%
+  group_by(site_id,year, month) %>% 
   dplyr::summarise(n_ctl = sum(treatment == "CTL",na.rm=T),
                    n_otc = sum(treatment == "OTC",na.rm=T),
                    n_sf = sum(treatment == "SNOWFENCE",na.rm=T),
@@ -102,10 +95,10 @@ monthly <- working_data %>%
                    m_otc = mean(co2[treatment == "OTC"],na.rm=T),
                    m_sf = mean(co2[treatment == "SNOWFENCE"],na.rm=T),
                    m_otc_sf = mean(co2[treatment == "OTCxSNOWFENCE"],na.rm=T),
-                   s_ctl = mean(co2[treatment == "CTL"],na.rm=T),
-                   s_otc = mean(co2[treatment == "OTC"],na.rm=T),
-                   s_sf = mean(co2[treatment == "SNOWFENCE"],na.rm=T),
-                   s_otc_sf = mean(co2[treatment == "OTCxSNOWFENCE"],na.rm=T))
+                   s_ctl = sd(co2[treatment == "CTL"],na.rm=T),
+                   s_otc = sd(co2[treatment == "OTC"],na.rm=T),
+                   s_sf = sd(co2[treatment == "SNOWFENCE"],na.rm=T),
+                   s_otc_sf = sd(co2[treatment == "OTCxSNOWFENCE"],na.rm=T))
 
 monthly_otc <- monthly %>% filter(!is.na(m_otc))
 monthly_otc <- monthly_otc[,-c(grep("sf",colnames(monthly_otc)))]
@@ -189,7 +182,49 @@ colnames(otc_sf_effect_sizes) <- gsub("vi", "vi_otc_sf",colnames(otc_sf_effect_s
 
 
 ```
-plotty 
+
+# models
+
+```{r yo}
+#otc
+otc_total <- rma.mv(yi_otc, vi_otc, 
+                   random=list(~ 1 | site_id, 
+                            ~ year | site_id), 
+                   struct="CAR",
+                   mods = ~month,
+                   data=otc_effect_sizes)
+summary(otc_total)
+forest(otc_total)
+ggplot(otc_effect_sizes) +
+  geom_boxplot(aes(x=as.factor(month), y= yi_otc))+
+  facet_wrap(~site_id)
+  
+
+#SF
+sf_total <- rma.mv(yi_sf, vi_sf, 
+                   random=list(~ 1 | month, 
+                            ~ year | month), 
+                   struct="CAR",
+                   data=sf_effect_sizes)
+summary(sf_total)
+forest(sf_total)
+ggplot(sf_effect_sizes) +
+  geom_boxplot(aes(x=as.factor(month), y= yi_sf,fill=site_id))
+
+#otc_sf
+otc_sf_total <- rma.mv(yi_otc_sf, vi_otc_sf, 
+                   random=list(~ 1 | month, 
+                            ~ year | month), 
+                   struct="CAR",
+                   data=otc_sf_effect_sizes)
+summary(otc_sf_total)
+forest(otc_sf_total)
+ggplot(otc_sf_effect_sizes) +
+  geom_boxplot(aes(x=as.factor(month), y= yi_otc_sf,,fill=site_id))
+
+```
+
+
 
 ```{r }
 ggplot(otc_effect_sizes)+
