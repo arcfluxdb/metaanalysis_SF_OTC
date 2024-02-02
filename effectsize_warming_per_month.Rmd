@@ -15,9 +15,7 @@ source("data_cleaning.R") # get up-to date dataset
 
 str(full_data)
 
-working_data <- all_dates %>% 
-  filter(treatment %in% c("CTL","OTC","SNOWFENCE","OTCxSNOWFENCE")) %>% 
-  filter(site_id != "AUS_1")
+
 
 
 
@@ -284,6 +282,7 @@ ggplot(stacked_effect_length)+
   facet_wrap(~duration)+
   theme_classic()
 ```
+
 ```{r}
 
 View(working_data[working_data$month == 1,])
