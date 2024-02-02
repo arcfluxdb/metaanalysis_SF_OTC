@@ -3,6 +3,17 @@
 
 library(readr)
 library(tidyverse)
+<<<<<<< HEAD
+=======
+
+library(dplyr)
+library(lubridate)
+library(ggplot2)
+library(effsize)
+library(esc)
+library(metafor)
+library(lme4)
+>>>>>>> 45ddc6b09afa3dbbe20854a2c5260a737beb8235
 
 library(dplyr)
 library(lubridate)
@@ -35,3 +46,4 @@ View(all_data_230823[all_data_230823$site_id=="ALA_1",])
 
 full_data$site_id <- recode(full_data$site_id, "Toolik MAT SF" = "ALA_13")
 
+full_data$site_id <- recode(full_data$site_id, "Toolik MAT SF" = "ALA_13")
