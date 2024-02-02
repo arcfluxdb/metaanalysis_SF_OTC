@@ -15,11 +15,11 @@ knitr::opts_chunk$set(echo = TRUE)
 
 source("data_cleaning.R") # get up-to date dataset
 
-str(full_data)
-
-#filter treatments we are interested in
-working_data <- full_data %>% 
-  filter(treatment %in% c("CTL","OTC","SNOWFENCE","OTCxSNOWFENCE"))
+str(working_data)
+# 
+# #filter treatments we are interested in
+# working_data <- full_data %>% 
+#   filter(treatment %in% c("CTL","OTC","SNOWFENCE","OTCxSNOWFENCE"))
 
 working_data$month <- month(working_data$flux_date)
 
