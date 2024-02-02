@@ -19,17 +19,17 @@ working_data <- all_dates %>%
   filter(treatment %in% c("CTL","OTC","SNOWFENCE","OTCxSNOWFENCE")) %>% 
   filter(site_id != "AUS_1")
 
-<<<<<<< HEAD
+
 
 working_data$month <- month(working_data$flux_date)
 
 
 
 
-=======
+
 working_data$month <- month(working_data$flux_date)
 
->>>>>>> 45ddc6b09afa3dbbe20854a2c5260a737beb8235
+
 working_data$monthseason <- ifelse(working_data$month <= 3,"NGS",
                                    ifelse(working_data$month <= 5, "Shoulder",
                                           ifelse(working_data$month <= 9, "GS",
@@ -47,7 +47,7 @@ ggplot(working_data) +
 
 ```{r months, echo=FALSE}
 ggplot(working_data) +
-<<<<<<< HEAD
+
   geom_bar(aes(x=month, fill = site_id),stat = "count") + 
   facet_wrap(~monthseason,scales="free")+
   theme_classic()
@@ -58,9 +58,9 @@ plotdata <- working_data %>%
 ggplot(plotdata) +
   geom_bar(aes(x=month, fill = site_id),stat = "count") + 
   facet_wrap(~treatment,scales="free")+
-=======
+
   geom_bar(aes(x=month, fill = treatment),stat = "count") + 
->>>>>>> 45ddc6b09afa3dbbe20854a2c5260a737beb8235
+
   theme_classic()
 ```
  first up splittinf the data into the different treatments
