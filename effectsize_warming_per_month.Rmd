@@ -35,16 +35,42 @@ working_data$monthseason <- ifelse(working_data$month <= 3,"NGS",
 ```{r treatments}
 ggplot(working_data) +
   geom_bar(aes(x=treatment,fill=site_id),stat = "count") + 
+  scale_fill_viridis_d(option = "turbo")+
+  theme_classic()
+```
+```{r treatments}
+ggplot(working_data[working_data$site_id != "ALA_1",]) +
+  geom_bar(aes(x=treatment,fill=site_id),stat = "count") + 
+  scale_fill_viridis_d(option = "turbo")+
+  theme_classic()
+```
+```{r treatments}
+ggplot(working_data[working_data$site_id != "ALA_1" & working_data$treatment %in% c("SNOWFENCE","OTCxSNOWFENCE"),]) +
+  geom_bar(aes(x=treatment,fill=site_id),stat = "count") + 
+  scale_fill_viridis_d(option = "turbo")+
+  theme_classic()
+```
+```{r treatments}
+ggplot(working_data[working_data$site_id != "ALA_1" & working_data$treatment %in% c("SNOWFENCE","OTCxSNOWFENCE"),]) +
+  geom_bar(aes(x=treatment,fill=site_id),stat = "count") + 
+  scale_fill_viridis_d(option = "turbo")+
+  facet_wrap(~monthseason,scales="free")+
+  theme_classic()
+```
+```{r treatments}
+ggplot(working_data[working_data$site_id != "ALA_1" & working_data$treatment %in% c("SNOWFENCE","OTCxSNOWFENCE"),]) +
+  geom_bar(aes(x=month,fill=site_id),stat = "count") + 
+  scale_fill_viridis_d(option = "turbo")+
+  facet_wrap(~treatment,scales="free")+
   theme_classic()
 ```
 
-
 ```{r months, echo=FALSE}
-ggplot(working_data) +
-
-  geom_bar(aes(x=month, fill = site_id),stat = "count") + 
-  facet_wrap(~monthseason,scales="free")+
-  theme_classic()
+# ggplot(working_data) +
+# 
+#   geom_bar(aes(x=month, fill = site_id),stat = "count") + 
+#   facet_wrap(~monthseason,scales="free")+
+#   theme_classic()
 
 plotdata <- working_data %>% 
   group_by(site_id, year,month,treatment) %>% 
@@ -54,32 +80,6 @@ ggplot(plotdata) +
   facet_wrap(~treatment,scales="free")+ 
 
   theme_classic()
-```
- first up splittinf the data into the different treatments
-```{r}
-working_data %>% 
-  group_by(site_id, year) %>% 
-  dplyr::summarise(treatment = paste(unique(treatment), collapse = ", ")) %>% 
-  view()
-
-working_data %>%  
-  filter(!is.na(co2)) %>% 
-  group_by(site_id, year) %>% 
-  dplyr::summarise(ctl = sum(treatment == "CTL",na.rm=T),
-                   otc = sum(treatment == "OTC",na.rm=T),
-                   sf = sum(treatment == "SNOWFENCE",na.rm=T),
-                   otc_sf = sum(treatment == "OTCxSNOWFENCE",na.rm=T)
-                   ) %>% 
-  view()
-
-```
-
-
-```{r}
-working_data %>% 
-  group_by(site_id, year,month) %>% 
-  dplyr::summarise(treatment = paste(unique(treatment), collapse = ", ")) %>% 
-  view()
 ```
 
 
