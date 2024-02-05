@@ -123,6 +123,18 @@ colnames(otc_sf_effect_sizes) <- gsub("yi", "yi_otc_sf",colnames(otc_sf_effect_s
 colnames(otc_sf_effect_sizes) <- gsub("vi", "vi_otc_sf",colnames(otc_sf_effect_sizes))
 ```
 
+
+```{r}
+library(dplyr)
+
+result_table <- working_data %>%
+  group_by(site_id, treatment) %>%
+  summarize(across(everything(), ~sum(!is.na(.))))
+
+print(result_table)
+write.csv(result_table, "data_overview.csv")
+```
+
 # run multivariate effects model
 #SF
 ```{r SF}
