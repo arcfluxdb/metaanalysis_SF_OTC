@@ -35,16 +35,50 @@ working_data$monthseason <- ifelse(working_data$month <= 3,"NGS",
 ```{r treatments}
 ggplot(working_data) +
   geom_bar(aes(x=treatment,fill=site_id),stat = "count") + 
+  scale_fill_viridis_d(option = "turbo")+
+  theme_classic()
+```
+```{r treatments}
+ggplot(working_data[working_data$site_id != "ALA_1",]) +
+  geom_bar(aes(x=treatment,fill=site_id),stat = "count") + 
+  scale_fill_viridis_d(option = "turbo")+
+  theme_classic()
+```
+```{r treatments}
+ggplot(working_data[working_data$site_id != "ALA_1" & working_data$treatment %in% c("SNOWFENCE","OTCxSNOWFENCE"),]) +
+  geom_bar(aes(x=treatment,fill=site_id),stat = "count") + 
+  scale_fill_viridis_d(option = "turbo")+
+  theme_classic()
+```
+```{r treatments}
+ggplot(working_data[working_data$site_id != "ALA_1" & working_data$treatment %in% c("SNOWFENCE","OTCxSNOWFENCE"),]) +
+  geom_bar(aes(x=treatment,fill=site_id),stat = "count") + 
+  scale_fill_viridis_d(option = "turbo")+
+  facet_wrap(~monthseason,scales="free")+
+  theme_classic()
+```
+```{r treatments}
+ggplot(working_data[working_data$site_id != "ALA_1" & working_data$treatment %in% c("SNOWFENCE","OTCxSNOWFENCE"),]) +
+  geom_bar(aes(x=month,fill=site_id),stat = "count") + 
+  scale_fill_viridis_d(option = "turbo")+
+  facet_wrap(~treatment,scales="free")+
+  theme_classic()
+```
+```{r treatments}
+ggplot(working_data[working_data$site_id != "ALA_1" & working_data$treatment %in% c("OTC","SNOWFENCE","OTCxSNOWFENCE"),]) +
+  geom_bar(aes(x=month,fill=site_id),stat = "count") + 
+  scale_fill_viridis_d(option = "turbo")+
+  facet_wrap(~treatment,scales="free")+
   theme_classic()
 ```
 
 
 ```{r months, echo=FALSE}
-ggplot(working_data) +
-
-  geom_bar(aes(x=month, fill = site_id),stat = "count") + 
-  facet_wrap(~monthseason,scales="free")+
-  theme_classic()
+# ggplot(working_data) +
+# 
+#   geom_bar(aes(x=month, fill = site_id),stat = "count") + 
+#   facet_wrap(~monthseason,scales="free")+
+#   theme_classic()
 
 plotdata <- working_data %>% 
   group_by(site_id, year,month,treatment) %>% 
@@ -55,38 +89,12 @@ ggplot(plotdata) +
 
   theme_classic()
 ```
- first up splittinf the data into the different treatments
-```{r}
-working_data %>% 
-  group_by(site_id, year) %>% 
-  dplyr::summarise(treatment = paste(unique(treatment), collapse = ", ")) %>% 
-  view()
-
-working_data %>%  
-  filter(!is.na(co2)) %>% 
-  group_by(site_id, year) %>% 
-  dplyr::summarise(ctl = sum(treatment == "CTL",na.rm=T),
-                   otc = sum(treatment == "OTC",na.rm=T),
-                   sf = sum(treatment == "SNOWFENCE",na.rm=T),
-                   otc_sf = sum(treatment == "OTCxSNOWFENCE",na.rm=T)
-                   ) %>% 
-  view()
-
-```
-
-
-```{r}
-working_data %>% 
-  group_by(site_id, year,month) %>% 
-  dplyr::summarise(treatment = paste(unique(treatment), collapse = ", ")) %>% 
-  view()
-```
 
 
 Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
 ```{r preps}
 monthly <- working_data %>%
-  group_by(site_id,year, month) %>% 
+  group_by(site_id,year) %>% 
   dplyr::summarise(n_ctl = sum(treatment == "CTL",na.rm=T),
                    n_otc = sum(treatment == "OTC",na.rm=T),
                    n_sf = sum(treatment == "SNOWFENCE",na.rm=T),
@@ -229,29 +237,26 @@ ggplot(otc_sf_effect_sizes) +
 ```{r }
 ggplot(otc_effect_sizes)+
   geom_boxplot(aes(x=as.factor(month),y=yi_otc),varwidth = TRUE)+
-  geom_smooth(aes(x=month,y=yi_otc),method = "lm", se=F)+
-  geom_jitter(aes(x=as.factor(month),y=yi_otc,color=site_id),width = 0.1)+
+  geom_jitter(aes(x=as.factor(month),y=yi_otc,color=site_id),width = 0.1,alpha = 0.5)+
   theme_minimal()
 
-otc_model <- lmer(yi_otc ~ month + (1|site_id) + (1|year), 
-              weights = 1 / vi_otc^2,
-              data = otc_effect_sizes)
-summary(otc_model)
+# otc_model <- lmer(yi_otc ~ month + (1|site_id) + (1|year), 
+#               weights = 1 / vi_otc^2,
+#               data = otc_effect_sizes)
+# summary(otc_model)
 ```
 
 ```{r }
 ggplot(sf_effect_sizes)+
   geom_boxplot(aes(x=as.factor(month),y=yi_sf),varwidth = TRUE)+
-  geom_smooth(aes(x=month,y=yi_sf),method = "lm", se=F)+
-  geom_jitter(aes(x=as.factor(month),y=yi_sf,color=site_id),width = 0.1)+
+  geom_jitter(aes(x=as.factor(month),y=yi_sf,color=site_id),width = 0.1,alpha = 0.5)+
   theme_minimal()
 ```
 
 ```{r}
 ggplot(otc_sf_effect_sizes)+
   geom_boxplot(aes(x=as.factor(month),y=yi_otc_sf),varwidth = T)+
-  geom_smooth(aes(x=month,y=yi_otc_sf),method = "lm", se=F)+
-  geom_jitter(aes(x=as.factor(month),y=yi_otc_sf,color=site_id),width = 0.1)+
+  geom_jitter(aes(x=as.factor(month),y=yi_otc_sf,color=site_id),width = 0.1,alpha = 0.5)+
   theme_minimal()
 ```
 
@@ -283,16 +288,13 @@ ggplot(full_effect_size)+
 ```
 
 ```{r}
-ggplot(stacked_effect)+
-  geom_boxplot(aes(x=as.factor(month), y = effectsize, fill = treatment), alpha = 0.5)+
-  geom_smooth(aes(x=month,y = effectsize, color=treatment), method = "lm", se = F)+
-  geom_jitter(aes(x=as.factor(month),y=effectsize,color=site_id),width = 0.1)+
-  theme_classic()
-
 
 ggplot(stacked_effect, aes(x = as.factor(month), y = effectsize, fill = treatment)) +
-  geom_boxplot(alpha = 0.5) +
+  geom_boxplot(varwidth = T, alpha = 0.5) +
   geom_smooth(aes(color = treatment), method = "lm", se = FALSE) +
+  geom_hline(yintercept = 0.5, alpha = 0.75)+
+  geom_hline(yintercept = 0.25, alpha = 0.75)+
+  geom_hline(yintercept = 0.75, alpha = 0.75)+
   #geom_jitter(aes(color = site_id), position = position_jitterdodge()) +
   theme_classic()
 ```
