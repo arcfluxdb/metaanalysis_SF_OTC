@@ -94,7 +94,7 @@ ggplot(plotdata) +
 Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
 ```{r preps}
 monthly <- working_data %>%
-  group_by(site_id,year) %>% 
+  group_by(site_id,year,month) %>% 
   dplyr::summarise(n_ctl = sum(treatment == "CTL",na.rm=T),
                    n_otc = sum(treatment == "OTC",na.rm=T),
                    n_sf = sum(treatment == "SNOWFENCE",na.rm=T),
@@ -238,6 +238,7 @@ ggplot(otc_sf_effect_sizes) +
 ggplot(otc_effect_sizes)+
   geom_boxplot(aes(x=as.factor(month),y=yi_otc),varwidth = TRUE)+
   geom_jitter(aes(x=as.factor(month),y=yi_otc,color=site_id),width = 0.1,alpha = 0.5)+
+  facet_wrap(~site_id)+
   theme_minimal()
 
 # otc_model <- lmer(yi_otc ~ month + (1|site_id) + (1|year), 
@@ -245,6 +246,16 @@ ggplot(otc_effect_sizes)+
 #               data = otc_effect_sizes)
 # summary(otc_model)
 ```
+```{r}
+ggplot(otc_effect_sizes[otc_effect_sizes$site_id == "GRE_6",])+
+    #geom_boxplot(aes(x=as.factor(month),y=yi_otc),varwidth = TRUE)+
+    #geom_jitter(aes(x=as.factor(month),y=yi_otc,color=as.factor(year)),size =4)+
+    geom_smooth(aes(x=month,y=yi_otc,color=as.factor(year)),method="lm",se=F)+
+    facet_wrap(~site_id)+
+    theme_minimal()
+```
+
+
 
 ```{r }
 ggplot(sf_effect_sizes)+
