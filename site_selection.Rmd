@@ -38,13 +38,13 @@ summary_stats <- site_df_CTL %>%
                            sd = ~sd(., na.rm = TRUE),
                            n = ~n()))
 
-# Separate data for treatments A and N using filter
+# Separate data for treatments OTC and SF using filter
 otc <- summary_stats %>% dplyr::filter(exp_warming_type_method == "OTC")
 snow_fence <- summary_stats %>% dplyr::filter(exp_warming_type_method == "SF")
 snow_fence_otc <- summary_stats %>% dplyr::filter(exp_warming_type_method == "OTCxSF")
 ```
 
-```{r}
+```{r calculate effect sizes}
 # Loop through variables
 for (var in variables_of_interest) {
   # Select data for current variable
