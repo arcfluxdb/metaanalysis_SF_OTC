@@ -1,0 +1,135 @@
+---
+title: "site_selection"
+author: "Sarah"
+date: "2024-04-29"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+source("data_cleaning.R") # get up-to date dataset
+
+str(working_data)
+site_df_CTL <- subset(working_data, treatment=="CTL" & c_loss=="CO2",)
+site_df_CTL$exp_warming_type_method <- as.factor(site_df_CTL$exp_warming_type_method)
+
+# # #filter treatments we are interested in
+# # working_data <- full_data %>% 
+# #   filter(treatment %in% c("CTL","OTC","SNOWFENCE","OTCxSNOWFENCE"))
+# 
+# working_data$month <- month(working_data$flux_date)
+# 
+# working_data$monthseason <- ifelse(working_data$month <= 3,"NGS",
+#                                    ifelse(working_data$month <= 5, "Shoulder",
+#                                           ifelse(working_data$month <= 9, "GS",
+#                                                  ifelse(working_data$month <= 11, "Shoulder", "NGS"))))
+```
+```{r calculate N, mean and sd}
+
+# Define variables of interest
+variables_of_interest <- c("par", "air_temp", "soil_temp")
+
+# Summarize multiple variables
+summary_stats <- site_df_CTL %>%
+  group_by(site_id, year, treatment, exp_warming_type_method) %>%
+  dplyr::summarize_at(vars(variables_of_interest),
+                      list(mean = ~mean(., na.rm = TRUE),
+                           sd = ~sd(., na.rm = TRUE),
+                           n = ~n()))
+
+# Separate data for treatments A and N using filter
+otc <- summary_stats %>% dplyr::filter(exp_warming_type_method == "OTC")
+snow_fence <- summary_stats %>% dplyr::filter(exp_warming_type_method == "SF")
+snow_fence_otc <- summary_stats %>% dplyr::filter(exp_warming_type_method == "OTCxSF")
+```
+
+```{r}
+# Loop through variables
+for (var in variables_of_interest) {
+  # Select data for current variable
+  data_subset <- summary_stats %>% select(site_id, year, treatment, exp_warming_type_method, !!var)
+  
+  # Calculate effect size (replace "es" with your desired effect size measure)
+  effect_size <- escalc(measure = "SMD", data = data_subset, 
+                        group = treatment, 
+                         m1i = mean(Snow_Depth[Treatment == "OTC"]), 
+                          m2i = mean(Snow_Depth[Treatment == "SNOWFENCE"]), 
+                          sd1i = sd(Snow_Depth[Treatment == "OTC"]), 
+                          sd2i = sd(now_Depth[Treatment == "SNOWFENCE"]), 
+                          n1i = sum(treatment == "OTC"), 
+                           n2i = sum(treatment == "SNOWFENCE")
+                        )
+          
+  
+  # Print or store the results for variable 'var'
+  print(effect_size)
+}
+
+```
+
+
+```{r calculating effect sizes}
+# Load necessary libraries
+library(metafor)
+
+# Calculate standardized mean difference (SMD) for snow depth between OTC and snow fence treatments
+smd <- escalc(measure = "SMD", 
+              m1i = mean(Snow_Depth[Treatment == "OTC"]), 
+              m2i = mean(Snow_Depth[Treatment == "SNOWFENCE"]), 
+              sd1i = sd(Snow_Depth[Treatment == "OTC"]), 
+              sd2i = sd(now_Depth[Treatment == "SNOWFENCE"]), 
+              n1i = sum(treatment == "OTC"), 
+              n2i = sum(treatment == "SNOWFENCE"))
+
+# Combine effect sizes and other relevant data into a dataframe
+effect_size_data <- data.frame(
+  Variable = "Snow Depth",
+  Treatment = c("OTC", "SNOWFENCE"),
+  Effect_Size = smd$yi,
+  Lower_CI = smd$ci.lb,
+  Upper_CI = smd$ci.ub
+)
+
+# Create a forest plot
+forest(smd, slab = effect_size_data$Variable, refline = 0)
+
+
+
+```
+
+```{r}
+# Load necessary libraries
+library(metafor)
+library(ggplot2)
+
+# Define variables of interest
+variables_of_interest <- c("par", "air_temp", "soil_temp")
+
+# Create an empty list to store forest plots
+forest_plots <- list()
+
+# Loop through each variable of interest
+for (variable in variables_of_interest) {
+  # Calculate effect sizes using escalc
+  es <- escalc(measure = "MD", m1i = eval(parse(text = paste0("mean_", variable))), 
+               sd1i = eval(parse(text = paste0("sd_", variable))), 
+               ni = eval(parse(text = paste0("n_", variable))), 
+               data = summary_stats, 
+               subset = exp_warming_type_method == "OTC", 
+               append = TRUE)
+  
+  # Create a forest plot
+  p <- forest(es, slab = summary_stats$site_id, xlab = variable, xlim = c(-10, 10), 
+              at = c(-10, -5, 0, 5, 10), refline = 0, order = "obs", showweights = TRUE)
+  
+  # Add plot to the list
+  forest_plots[[variable]] <- p
+}
+
+# Plot all forest plots
+for (variable in variables_of_interest) {
+  print(forest_plots[[variable]])
+}
+```
+
