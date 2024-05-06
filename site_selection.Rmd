@@ -42,9 +42,26 @@ summary_stats <- site_df_CTL %>%
 otc <- summary_stats %>% dplyr::filter(exp_warming_type_method == "OTC")
 snow_fence <- summary_stats %>% dplyr::filter(exp_warming_type_method == "SF")
 snow_fence_otc <- summary_stats %>% dplyr::filter(exp_warming_type_method == "OTCxSF")
+
+effect_df <- full_join(otc, snow_fence, by = c("site_id", "year", "treatment", "exp_warming_type_method"),
+                       suffix = c("_otc", "_sf"))
 ```
 
 ```{r calculate effect sizes}
+#Problem: OTC and SF sites are not connected, so how to calculate an effect size out of them
+# Calculate SMD effect sizes
+smd_par <- escalc("SMD",
+  m1i = par_mean_otc,
+  n1i = par_n_otc,
+  sd1i = par_sd_otc,
+  m2i = par_mean_sf,
+  n2i = par_n_sf,
+  sd2i = par_sd_sf,
+  data = effect_df
+)
+
+
+
 # Loop through variables
 for (var in variables_of_interest) {
   # Select data for current variable
