@@ -16,11 +16,12 @@ str(working_data)
 
 working_data$site_id <- as.factor(working_data$site_id)
 working_data$treatment <- as.factor(working_data$treatment)
+working_data$er_mm_method <- as.factor(working_data$er_mm_method)
 SF <- subset(working_data, treatment=="SNOWFENCE" | treatment=="OTCxSNOWFENCE",)
-levels(working_data$treatment)
+levels(working_data$er_mm_method)
 str(SF)
 
-subset(SF, site_id=="CAN_6",)
+subset(SF, site_id=="ALA_1",)
 
 # # #filter treatments we are interested in
 # # working_data <- full_data %>% 
