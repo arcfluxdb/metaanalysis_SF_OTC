@@ -22,6 +22,8 @@ str(working_data)
 #   filter(treatment %in% c("CTL","OTC","SNOWFENCE","OTCxSNOWFENCE"))
 
 working_data$month <- month(working_data$flux_date)
+
+#override initial flux_id as we have no seperation in growing season
 working_data$flux_id <- as.factor(paste(working_data$site_id, working_data$year,working_data$c_loss, sep = "_"))
 
 # #working_data$monthseason <- ifelse(working_data$month <= 3,"NGS",
@@ -76,7 +78,7 @@ otc_effect_sizes <-
     # control site sample size
     sd2i = sd_ctl,
     # control site SD
-    data = monthly_otc # This is where the escalc function can find all the data for our meta-analysis
+    data = effect_df # This is where the escalc function can find all the data for our meta-analysis
   )
 
 colnames(otc_effect_sizes) <- gsub("yi", "yi_otc",colnames(otc_effect_sizes))
@@ -98,7 +100,7 @@ sf_effect_sizes <-
     # control site sample size
     sd2i = sd_ctl,
     # control site SD
-    data = monthly_sf # This is where the escalc function can find all the data for our meta-analysis
+    data = effect_df # This is where the escalc function can find all the data for our meta-analysis
   )
 
 colnames(sf_effect_sizes) <- gsub("yi", "yi_sf",colnames(sf_effect_sizes))
@@ -120,7 +122,7 @@ otc_sf_effect_sizes <-
     # control site sample size
     sd2i = sd_ctl,
     # control site SD
-    data = monthly_otc_sf # This is where the escalc function can find all the data for our meta-analysis
+    data = effect_df # This is where the escalc function can find all the data for our meta-analysis
   )
 
 colnames(otc_sf_effect_sizes) <- gsub("yi", "yi_otc_sf",colnames(otc_sf_effect_sizes))
@@ -128,7 +130,7 @@ colnames(otc_sf_effect_sizes) <- gsub("vi", "vi_otc_sf",colnames(otc_sf_effect_s
 ```
 
 
-```{r}
+```{r overview datapoints}
 library(dplyr)
 
 result_table <- working_data %>%
@@ -136,7 +138,7 @@ result_table <- working_data %>%
   summarize(across(everything(), ~sum(!is.na(.))))
 
 print(result_table)
-write.csv(result_table, "data_overview.csv")
+#write.csv(result_table, "data_overview.csv")
 ```
 
 # run multivariate effects model
@@ -151,36 +153,58 @@ SF_total <- rma.mv(yi_sf, vi_sf,
 summary(SF_total)
 forest(SF_total)
 predict(SF_total)
-#GS
-SF_GS <- rma.mv(yi_sf, vi_sf, 
-                random=list(~ 1 | site_id, 
-                            ~ year | site_id), 
-                struct="CAR", 
-                data=subset(sf_effect_sizes, monthseason=="GS",)
-)
 
-forest(SF_GS)
-summary(SF_GS)
-predict(SF_GS)
-#NGS
-SF_NGS <- rma.mv(yi_sf, vi_sf,
-                random=list(~ 1 | site_id, 
-                            ~ year | site_id), 
-                struct="CAR", 
-                data=subset(sf_effect_sizes, monthseason=="NGS",)
-)
-summary(SF_NGS)
-predict(SF_NGS)
-#Shoulder
-SF_sh <- rma.mv(yi_sf, vi_sf, 
-                random=list(~ 1 | site_id, 
-                            ~ year | site_id), 
-                struct="CAR", 
-                data=subset(sf_effect_sizes, monthseason=="Shoulder",)
-)
-summary(SF_sh)
-forest(SF_sh)
-predict(SF_sh)
+
+# cannot get site_id as y-axis...
+sf_effect_sizes$site_id <- as.factor(sf_effect_sizes$site_id)
+SF_na <- sf_effect_sizes[complete.cases(sf_effect_sizes$yi_sf), ]
+library(orchaRd)
+model_SF<-orchaRd::mod_results(SF_total, mod="site_id", data=SF_na)
+orchard_plot(model_SF, mod = "year", group="year", 
+             xlab = "Ecosystem respiration", transfm = "none",data=sf_effect_sizes,
+             trunk.size = 6)+
+#scale_y_continuous(limits = c(-4, 4)) +
+  theme_classic()+
+  theme(text = element_text(family = "Arial"),
+        axis.text = element_text(size = 15),
+        axis.title = element_text(size = 15))+
+  theme(legend.position= c(0.5, 0.05),
+        legend.justification = c(0,1),
+        legend.key.size = unit(1, "mm")) +
+  theme(legend.direction="horizontal",
+        legend.title = element_text(size =10),
+        legend.text = element_text(size = 10))
+
+# #GS
+# SF_GS <- rma.mv(yi_sf, vi_sf, 
+#                 random=list(~ 1 | site_id, 
+#                             ~ year | site_id), 
+#                 struct="CAR", 
+#                 data=subset(sf_effect_sizes, monthseason=="GS",)
+# )
+# 
+# forest(SF_GS)
+# summary(SF_GS)
+# predict(SF_GS)
+# #NGS
+# SF_NGS <- rma.mv(yi_sf, vi_sf,
+#                 random=list(~ 1 | site_id, 
+#                             ~ year | site_id), 
+#                 struct="CAR", 
+#                 data=subset(sf_effect_sizes, monthseason=="NGS",)
+# )
+# summary(SF_NGS)
+# predict(SF_NGS)
+# #Shoulder
+# SF_sh <- rma.mv(yi_sf, vi_sf, 
+#                 random=list(~ 1 | site_id, 
+#                             ~ year | site_id), 
+#                 struct="CAR", 
+#                 data=subset(sf_effect_sizes, monthseason=="Shoulder",)
+# )
+# summary(SF_sh)
+# forest(SF_sh)
+# predict(SF_sh)
 
 ```
 
@@ -195,36 +219,44 @@ OTC_total <- rma.mv(yi_otc, vi_otc,
 summary(OTC_total)
 forest(OTC_total)
 predict(OTC_total)
-#GS
-OTC_GS <- rma.mv(yi_otc, vi_otc, 
-                random=list(~ 1 | site_id, 
-                            ~ year | site_id), 
-                struct="CAR", 
-                data=subset(otc_effect_sizes, monthseason=="GS",)
-)
 
-forest(OTC_GS)
-summary(OTC_GS)
-predict(OTC_GS)
-#NGS
-OTC_NGS <- rma.mv(yi_otc, vi_otc, 
-                random=list(~ 1 | site_id, 
-                            ~ year | site_id), 
-                struct="CAR", 
-                data=subset(otc_effect_sizes, monthseason=="NGS",)
-)
-summary(OTC_NGS)
-predict(OTC_NGS)
-#Shoulder
-OTC_sh <- rma.mv(yi_otc, vi_otc, 
-                random=list(~ 1 | site_id, 
-                            ~ year | site_id), 
-                struct="CAR", 
-                data=subset(otc_effect_sizes, monthseason=="Shoulder",)
-)
-summary(OTC_sh)
-forest(OTC_sh)
-predict(OTC_sh)
+
+OTC_na <- otc_effect_sizes[complete.cases(otc_effect_sizes$yi_otc), ]
+library(orchaRd)
+model_OTC<-orchaRd::mod_results(OTC_total, group="site_id", data=OTC_na)
+orchard_plot(model_OTC, mod = "year", group="year", 
+             xlab = "Ecosystem respiration", transfm = "none",data=otc_effect_sizes,
+             trunk.size = 6)
+# #GS
+# OTC_GS <- rma.mv(yi_otc, vi_otc, 
+#                 random=list(~ 1 | site_id, 
+#                             ~ year | site_id), 
+#                 struct="CAR", 
+#                 data=subset(otc_effect_sizes, monthseason=="GS",)
+# )
+# 
+# forest(OTC_GS)
+# summary(OTC_GS)
+# predict(OTC_GS)
+# #NGS
+# OTC_NGS <- rma.mv(yi_otc, vi_otc, 
+#                 random=list(~ 1 | site_id, 
+#                             ~ year | site_id), 
+#                 struct="CAR", 
+#                 data=subset(otc_effect_sizes, monthseason=="NGS",)
+# )
+# summary(OTC_NGS)
+# predict(OTC_NGS)
+# #Shoulder
+# OTC_sh <- rma.mv(yi_otc, vi_otc, 
+#                 random=list(~ 1 | site_id, 
+#                             ~ year | site_id), 
+#                 struct="CAR", 
+#                 data=subset(otc_effect_sizes, monthseason=="Shoulder",)
+# )
+# summary(OTC_sh)
+# forest(OTC_sh)
+# predict(OTC_sh)
 
 ```
 
@@ -240,36 +272,43 @@ OTC_SF_total <- rma.mv(yi_otc_sf, vi_otc_sf,
 summary(OTC_SF_total)
 forest(OTC_SF_total)
 predict(OTC_SF_total)
-#GS
-OTC_SF_GS <- rma.mv(yi_otc_sf, vi_otc_sf,  
-                random=list(~ 1 | site_id, 
-                            ~ year | site_id), 
-                struct="CAR", 
-                data=subset(otc_sf_effect_sizes, monthseason=="GS",)
-)
 
-forest(OTC_SF_GS)
-summary(OTC_SF_GS)
-predict(OTC_SF_GS)
-#NGS
-OTC_SF_NGS <- rma.mv(yi_otc_sf, vi_otc_sf, 
-                random=list(~ 1 | site_id, 
-                            ~ year | site_id), 
-                struct="CAR", 
-                data=subset(otc_sf_effect_sizes, monthseason=="NGS",)
-)
-summary(OTC_SF_NGS)
-predict(OTC_SF_NGS)
-#Shoulder
-OTC_SF_sh <- rma.mv(yi_otc_sf, vi_otc_sf,  
-                random=list(~ 1 | site_id, 
-                            ~ year | site_id), 
-                struct="CAR", 
-                data=subset(otc_sf_effect_sizes, monthseason=="Shoulder",)
-)
-summary(OTC_SF_sh)
-forest(OTC_SF_sh)
-predict(OTC_SF_sh)
+OTC_SF_na <- otc_sf_effect_sizes[complete.cases(otc_sf_effect_sizes$yi_otc_sf), ]
+library(orchaRd)
+model_OTC_SF<-orchaRd::mod_results(OTC_SF_total, mod="site_id", group="site_id", data=OTC_SF_na)
+orchard_plot(model_OTC_SF, mod = "site_id", group="year", 
+             xlab = "Ecosystem respiration", transfm = "none",data=otc_sf_effect_sizes,
+             trunk.size = 6)
+# #GS
+# OTC_SF_GS <- rma.mv(yi_otc_sf, vi_otc_sf,  
+#                 random=list(~ 1 | site_id, 
+#                             ~ year | site_id), 
+#                 struct="CAR", 
+#                 data=subset(otc_sf_effect_sizes, monthseason=="GS",)
+# )
+# 
+# forest(OTC_SF_GS)
+# summary(OTC_SF_GS)
+# predict(OTC_SF_GS)
+# #NGS
+# OTC_SF_NGS <- rma.mv(yi_otc_sf, vi_otc_sf, 
+#                 random=list(~ 1 | site_id, 
+#                             ~ year | site_id), 
+#                 struct="CAR", 
+#                 data=subset(otc_sf_effect_sizes, monthseason=="NGS",)
+# )
+# summary(OTC_SF_NGS)
+# predict(OTC_SF_NGS)
+# #Shoulder
+# OTC_SF_sh <- rma.mv(yi_otc_sf, vi_otc_sf,  
+#                 random=list(~ 1 | site_id, 
+#                             ~ year | site_id), 
+#                 struct="CAR", 
+#                 data=subset(otc_sf_effect_sizes, monthseason=="Shoulder",)
+# )
+# summary(OTC_SF_sh)
+# forest(OTC_SF_sh)
+# predict(OTC_SF_sh)
 
 ```
 
