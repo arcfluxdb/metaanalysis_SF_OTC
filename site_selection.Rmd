@@ -11,8 +11,16 @@ knitr::opts_chunk$set(echo = TRUE)
 source("data_cleaning.R") # get up-to date dataset
 
 str(working_data)
-site_df_CTL <- subset(working_data, treatment=="CTL" & c_loss=="CO2",)
-site_df_CTL$exp_warming_type_method <- as.factor(site_df_CTL$exp_warming_type_method)
+#site_df_CTL <- subset(working_data, treatment=="CTL" & c_loss=="CO2",)
+#site_df_CTL$exp_warming_type_method <- as.factor(site_df_CTL$exp_warming_type_method)
+
+working_data$site_id <- as.factor(working_data$site_id)
+working_data$treatment <- as.factor(working_data$treatment)
+SF <- subset(working_data, treatment=="SNOWFENCE" | treatment=="OTCxSNOWFENCE",)
+levels(working_data$treatment)
+str(SF)
+
+subset(SF, site_id=="CAN_6",)
 
 # # #filter treatments we are interested in
 # # working_data <- full_data %>% 

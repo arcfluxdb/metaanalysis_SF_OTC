@@ -22,39 +22,43 @@ str(working_data)
 #   filter(treatment %in% c("CTL","OTC","SNOWFENCE","OTCxSNOWFENCE"))
 
 working_data$month <- month(working_data$flux_date)
+working_data$flux_id <- as.factor(paste(working_data$site_id, working_data$year,working_data$c_loss, sep = "_"))
 
-working_data$monthseason <- ifelse(working_data$month <= 3,"NGS",
-                                   ifelse(working_data$month <= 5, "Shoulder",
-                                          ifelse(working_data$month <= 9, "GS",
-                                                 ifelse(working_data$month <= 11, "Shoulder", "NGS"))))
+# #working_data$monthseason <- ifelse(working_data$month <= 3,"NGS",
+#                                    ifelse(working_data$month <= 5, "Shoulder",
+#                                           ifelse(working_data$month <= 9, "GS",
+#                                                  ifelse(working_data$month <= 11, "Shoulder", "NGS"))))
 ```
 
-```{r preps}
-monthly <- working_data %>% 
-  group_by(site_id, year, monthseason) %>% 
-  dplyr::summarise(n_ctl = sum(treatment == "CTL",na.rm=T),
-                   n_otc = sum(treatment == "OTC",na.rm=T),
-                   n_sf = sum(treatment == "SNOWFENCE",na.rm=T),
-                   n_otc_sf = sum(treatment == "OTCxSNOWFENCE",na.rm=T),
-                   mean_ctl = mean(co2[treatment == "CTL"],na.rm=T),
-                   mean_otc = mean(co2[treatment == "OTC"],na.rm=T),
-                   mean_sf = mean(co2[treatment == "SNOWFENCE"],na.rm=T),
-                   mean_otc_sf = mean(co2[treatment == "OTCxSNOWFENCE"],na.rm=T),
-                   sd_ctl = sd(co2[treatment == "CTL"],na.rm=T),
-                   sd_otc = sd(co2[treatment == "OTC"],na.rm=T),
-                   sd_sf = sd(co2[treatment == "SNOWFENCE"],na.rm=T),
-                   sd_otc_sf = sd(co2[treatment == "OTCxSNOWFENCE"],na.rm=T))
+```{r calculate N, mean and sd}
 
-monthly_otc <- monthly %>% filter(!is.na(mean_otc))
-monthly_otc <- monthly_otc[,-c(grep("sf",colnames(monthly_otc)))]
+# Define variables of interest
+variables_of_interest <- c("co2")
 
-monthly_sf <- monthly %>% filter(!is.na(mean_sf))
-monthly_sf <- monthly_sf[,-c(grep("otc",colnames(monthly_sf)))]
+# Summarize multiple variables
+summary_stats <- working_data %>%
+  group_by(site_id, year, treatment,flux_id) %>%
+  dplyr::summarize_at(vars(variables_of_interest),
+                      list(mean = ~mean(., na.rm = TRUE),
+                           sd = ~sd(., na.rm = TRUE),
+                           n = ~n()))
 
-monthly_otc_sf <- monthly %>% filter(!is.na(mean_otc_sf))
-monthly_otc_sf <- monthly_otc_sf[,c(1,2,3,c(grep("ctl|otc_sf",colnames(monthly_otc_sf))))]
+# Separate data for treatments OTC and SF using filter
+ctl <- summary_stats %>% dplyr::filter(treatment == "CTL")
+otc <- summary_stats %>% dplyr::filter(treatment == "OTC")
+snow_fence <- summary_stats %>% dplyr::filter(treatment == "SNOWFENCE")
+snow_fence_otc <- summary_stats %>% dplyr::filter(treatment == "OTCxSNOWFENCE")
+
+effect_df1 <- full_join(otc, snow_fence, by = c("site_id", "year","flux_id"),
+                       suffix = c("_otc", "_sf"))
+
+effect_df2 <- full_join(ctl, snow_fence_otc, by = c("site_id", "year","flux_id"),
+                       suffix = c("_ctl", "_otc_sf"))
+
+effect_df <- full_join(effect_df1, effect_df2, by = c("site_id", "year","flux_id"),
+                       suffix = c("", ""))
 ```
-lets go 
+
 ```{r effectsize calc}
 otc_effect_sizes <-
   escalc( # This is the function in metafor that allows us to calculate an effect size for each row in a database
