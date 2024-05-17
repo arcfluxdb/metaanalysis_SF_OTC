@@ -39,7 +39,7 @@ variables_of_interest <- c("co2")
 
 # Summarize multiple variables
 summary_stats <- working_data %>%
-  group_by(site_id, year, treatment,flux_id) %>%
+  group_by(site_id, year, treatment,flux_id, month) %>%
   dplyr::summarize_at(vars(variables_of_interest),
                       list(mean = ~mean(., na.rm = TRUE),
                            sd = ~sd(., na.rm = TRUE),
@@ -51,13 +51,13 @@ otc <- summary_stats %>% dplyr::filter(treatment == "OTC")
 snow_fence <- summary_stats %>% dplyr::filter(treatment == "SNOWFENCE")
 snow_fence_otc <- summary_stats %>% dplyr::filter(treatment == "OTCxSNOWFENCE")
 
-effect_df1 <- full_join(otc, snow_fence, by = c("site_id", "year","flux_id"),
+effect_df1 <- full_join(otc, snow_fence, by = c("site_id", "year","flux_id", "month"),
                        suffix = c("_otc", "_sf"))
 
-effect_df2 <- full_join(ctl, snow_fence_otc, by = c("site_id", "year","flux_id"),
+effect_df2 <- full_join(ctl, snow_fence_otc, by = c("site_id", "year","flux_id", "month"),
                        suffix = c("_ctl", "_otc_sf"))
 
-effect_df <- full_join(effect_df1, effect_df2, by = c("site_id", "year","flux_id"),
+effect_df <- full_join(effect_df1, effect_df2, by = c("site_id", "year","flux_id", "month"),
                        suffix = c("", ""))
 ```
 
@@ -146,6 +146,7 @@ print(result_table)
 ```{r SF}
 #total
 SF_total <- rma.mv(yi_sf, vi_sf, 
+                   mods= ~site_id,
                 random=list(~ 1 | site_id, 
                             ~ year | site_id), 
                 struct="CAR", 
@@ -154,13 +155,12 @@ summary(SF_total)
 forest(SF_total)
 predict(SF_total)
 
-
-# cannot get site_id as y-axis...
+#orchard plot
 sf_effect_sizes$site_id <- as.factor(sf_effect_sizes$site_id)
 SF_na <- sf_effect_sizes[complete.cases(sf_effect_sizes$yi_sf), ]
 library(orchaRd)
-model_SF<-orchaRd::mod_results(SF_total, mod="site_id", data=SF_na)
-orchard_plot(model_SF, mod = "year", group="year", 
+model_SF<-orchaRd::mod_results(SF_total, mod="site_id", group="site_id", data=SF_na)
+orchard_plot(model_SF, mod = "site_id", group = "site_id", 
              xlab = "Ecosystem respiration", transfm = "none",data=sf_effect_sizes,
              trunk.size = 6)+
 #scale_y_continuous(limits = c(-4, 4)) +
@@ -212,10 +212,13 @@ orchard_plot(model_SF, mod = "year", group="year",
 ```{r  OTC}
 #total
 OTC_total <- rma.mv(yi_otc, vi_otc, 
-                random=list(~ 1 | site_id, 
-                            ~ year | site_id), 
-                struct="CAR", 
-                data=otc_effect_sizes)
+                    mods= ~site_id,
+                    random=list(~ 1 | site_id, 
+                                ~ year | site_id), 
+                    struct="CAR", 
+                    data=otc_effect_sizes,
+                    control = list(iter.max = 10000))  # Increase iterations
+
 summary(OTC_total)
 forest(OTC_total)
 predict(OTC_total)
@@ -223,10 +226,21 @@ predict(OTC_total)
 
 OTC_na <- otc_effect_sizes[complete.cases(otc_effect_sizes$yi_otc), ]
 library(orchaRd)
-model_OTC<-orchaRd::mod_results(OTC_total, group="site_id", data=OTC_na)
-orchard_plot(model_OTC, mod = "year", group="year", 
-             xlab = "Ecosystem respiration", transfm = "none",data=otc_effect_sizes,
-             trunk.size = 6)
+model_OTC<-orchaRd::mod_results(OTC_total, mod = "site_id", group = "site_id", data=OTC_na)
+orchard_plot(model_OTC, mod = "site_id", group = "site_id", 
+             xlab = "Ecosystem respiration", transfm = "none",data=sf_effect_sizes,
+             trunk.size = 6)+
+#scale_y_continuous(limits = c(-4, 4)) +
+  theme_minimal()+
+  theme(text = element_text(family = "Arial"),
+        axis.text = element_text(size = 15),
+        axis.title = element_text(size = 15))+
+  theme(legend.position= c(0.5, 0.05),
+        legend.justification = c(0,1),
+        legend.key.size = unit(1, "mm")) +
+  theme(legend.direction="horizontal",
+        legend.title = element_text(size =10),
+        legend.text = element_text(size = 10))
 # #GS
 # OTC_GS <- rma.mv(yi_otc, vi_otc, 
 #                 random=list(~ 1 | site_id, 
@@ -259,26 +273,40 @@ orchard_plot(model_OTC, mod = "year", group="year",
 # predict(OTC_sh)
 
 ```
-
+http://127.0.0.1:35789/graphics/plot_zoom_png?width=1200&height=900
 #SFxOTC
 ```{r SFxOTC}
 
 #total
 OTC_SF_total <- rma.mv(yi_otc_sf, vi_otc_sf, 
+                       mods= ~site_id*year,
                 random=list(~ 1 | site_id, 
                             ~ year | site_id), 
                 struct="CAR", 
                 data=otc_sf_effect_sizes)
 summary(OTC_SF_total)
-forest(OTC_SF_total)
+forest(OTC_SF_total,
+       overall = TRUE)
 predict(OTC_SF_total)
 
 OTC_SF_na <- otc_sf_effect_sizes[complete.cases(otc_sf_effect_sizes$yi_otc_sf), ]
 library(orchaRd)
 model_OTC_SF<-orchaRd::mod_results(OTC_SF_total, mod="site_id", group="site_id", data=OTC_SF_na)
-orchard_plot(model_OTC_SF, mod = "site_id", group="year", 
-             xlab = "Ecosystem respiration", transfm = "none",data=otc_sf_effect_sizes,
-             trunk.size = 6)
+orchard_plot(model_OTC_SF, mod = "site_id", group = "site_id", 
+             xlab = "Ecosystem respiration", transfm = "none",data=sf_effect_sizes,
+             trunk.size = 6)+
+#scale_y_continuous(limits = c(-4, 4)) +
+  theme_minimal()+
+  theme(text = element_text(family = "Arial"),
+        axis.text = element_text(size = 15),
+        axis.title = element_text(size = 15))+
+  theme(legend.position= c(0.5, 0.05),
+        legend.justification = c(0,1),
+        legend.key.size = unit(1, "mm")) +
+  theme(legend.direction="horizontal",
+        legend.title = element_text(size =10),
+        legend.text = element_text(size = 10))
+
 # #GS
 # OTC_SF_GS <- rma.mv(yi_otc_sf, vi_otc_sf,  
 #                 random=list(~ 1 | site_id, 
