@@ -164,7 +164,7 @@ orchard_plot(model_SF, mod = "site_id", group = "site_id",
              xlab = "Ecosystem respiration", transfm = "none",data=sf_effect_sizes,
              trunk.size = 6)+
 #scale_y_continuous(limits = c(-4, 4)) +
-  theme_classic()+
+  theme_minimal()+
   theme(text = element_text(family = "Arial"),
         axis.text = element_text(size = 15),
         axis.title = element_text(size = 15))+
@@ -172,6 +172,7 @@ orchard_plot(model_SF, mod = "site_id", group = "site_id",
         legend.justification = c(0,1),
         legend.key.size = unit(1, "mm")) +
   theme(legend.direction="horizontal",
+        legend.position="bottom",
         legend.title = element_text(size =10),
         legend.text = element_text(size = 10))
 
@@ -212,12 +213,12 @@ orchard_plot(model_SF, mod = "site_id", group = "site_id",
 ```{r  OTC}
 #total
 OTC_total <- rma.mv(yi_otc, vi_otc, 
-                    mods= ~site_id,
-                    random=list(~ 1 | site_id, 
+                    mods= ~as.factor(site_id),
+                    random=list(~ 1 | site_id,
                                 ~ year | site_id), 
                     struct="CAR", 
                     data=otc_effect_sizes,
-                    control = list(iter.max = 10000))  # Increase iterations
+                    control = list(iter.max = 100000))  # Increase iterations
 
 summary(OTC_total)
 forest(OTC_total)
@@ -229,7 +230,7 @@ library(orchaRd)
 model_OTC<-orchaRd::mod_results(OTC_total, mod = "site_id", group = "site_id", data=OTC_na)
 orchard_plot(model_OTC, mod = "site_id", group = "site_id", 
              xlab = "Ecosystem respiration", transfm = "none",data=sf_effect_sizes,
-             trunk.size = 6)+
+             trunk.size = 6)
 #scale_y_continuous(limits = c(-4, 4)) +
   theme_minimal()+
   theme(text = element_text(family = "Arial"),
@@ -239,6 +240,7 @@ orchard_plot(model_OTC, mod = "site_id", group = "site_id",
         legend.justification = c(0,1),
         legend.key.size = unit(1, "mm")) +
   theme(legend.direction="horizontal",
+        legend.position="bottom",
         legend.title = element_text(size =10),
         legend.text = element_text(size = 10))
 # #GS
@@ -279,7 +281,7 @@ http://127.0.0.1:35789/graphics/plot_zoom_png?width=1200&height=900
 
 #total
 OTC_SF_total <- rma.mv(yi_otc_sf, vi_otc_sf, 
-                       mods= ~site_id*year,
+                       mods= ~site_id,
                 random=list(~ 1 | site_id, 
                             ~ year | site_id), 
                 struct="CAR", 
@@ -304,6 +306,7 @@ orchard_plot(model_OTC_SF, mod = "site_id", group = "site_id",
         legend.justification = c(0,1),
         legend.key.size = unit(1, "mm")) +
   theme(legend.direction="horizontal",
+        legend.position="bottom",
         legend.title = element_text(size =10),
         legend.text = element_text(size = 10))
 
@@ -337,6 +340,10 @@ orchard_plot(model_OTC_SF, mod = "site_id", group = "site_id",
 # summary(OTC_SF_sh)
 # forest(OTC_SF_sh)
 # predict(OTC_SF_sh)
+
+```
+## MAP
+```{r map}
 
 ```
 
