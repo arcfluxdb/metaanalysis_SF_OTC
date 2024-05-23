@@ -352,49 +352,40 @@ library(dplyr)
 
 sessionInfo()
 
-# # read in data
-# dat=read.csv(file = 'SMD_final.csv', na.strings = "NA", header=T)
-
-# add country code
-library(countrycode)
-dat$Code<- countrycode(dat$Country, origin = 'country.name', destination = 'iso3c')
-#does not recognize Svalbard -> manually change NA to SJM
-dat$Code[is.na(dat$Code)] <- "SJM"
-
-# number of years as radius
-years<-dat %>% dplyr::count(site_ID) 
-#rename n in "number of experiments"
-#merge with dat
-dat<-full_join(dat,years)
-n<-as.numeric(dat$n)
-
-# observations per site as color gradient
-obs<-dat %>% dplyr::group_by(Site_ID)  %>% 
-  summarise(obs_sum = sum(Nr_Obs))
-
-
-# observations per site as color gradient
-sumi<-dat %>% dplyr::group_by(Site_ID)  %>% 
-  summarise(obs_sum = sum(Nr_Obs),
-            n = n(),
-            Longitude..DD. = unique(Longitude..DD.),
-            Latitude..DD. = unique(Latitude..DD.),
-            Country = unique(Country))
-#rename n in "number of experiments"
-#merge with dat
-dat<-full_join(dat,obs)
-obs_sum<-as.numeric(dat$obs_sum)
-
-dat$Nr_Obs
-
+# # add country code
+# library(countrycode)
+# dat$Code<- countrycode(dat$Country, origin = 'country.name', destination = 'iso3c')
+# #does not recognize Svalbard -> manually change NA to SJM
+# dat$Code[is.na(dat$Code)] <- "SJM"
+# 
+# # number of years as radius
+# years<-dat %>% dplyr::count(site_ID) 
+# #rename n in "number of experiments"
+# #merge with dat
+# dat<-full_join(dat,years)
+# n<-as.numeric(dat$n)
+# 
+# # observations per site as color gradient
+# obs<-dat %>% dplyr::group_by(Site_ID)  %>% 
+#   summarise(obs_sum = sum(Nr_Obs))
+# 
+# 
+# # observations per site as color gradient
+# sumi<-dat %>% dplyr::group_by(Site_ID)  %>% 
+#   summarise(obs_sum = sum(Nr_Obs),
+#             n = n(),
+#             Longitude..DD. = unique(Longitude..DD.),
+#             Latitude..DD. = unique(Latitude..DD.),
+#             Country = unique(Country))
+# #rename n in "number of experiments"
+# #merge with dat
+# dat<-full_join(dat,obs)
+# obs_sum<-as.numeric(dat$obs_sum)
+# 
+# dat$Nr_Obs
 
 working_data$n_coord_site<-as.numeric(working_data$n_coord_site)
-# Assuming your data is loaded into a dataframe called 'data'
-library(dplyr)  # Load dplyr package
-
 unique_data <- distinct(working_data, site_id, e_coord_site, n_coord_site, treatment)  # Replace 'lon' and 'lat' with your coordinate column names
-
-
 
 # get map data
 thismap = map_data("world")
@@ -402,58 +393,63 @@ thismap = map_data("world")
 # Defines the x axes required
 x_lines <- seq(-120,180, by = 60)
 
-map<-ggplot() +
-  geom_polygon(data = thismap, aes(x = long, y = lat, group = group), fill = "lightgrey", colour = "white") +
+# Now modify the ggplot code
+map <- ggplot() +
+  geom_polygon(data = thismap, aes(x = long, y = lat, group = group), fill = "lightgrey", colour = "lightgrey") +
   
   # Convert to polar coordinates
   coord_map("ortho", orientation = c(90, 0, 0)) +
   scale_y_continuous(breaks = seq(30, 90, by = 10), labels = NULL) +
   
-  # Adds points
-  geom_point(data=subset(unique_data, treatment != "CTL" & treatment != "OTC", ), aes(x=e_coord_site, y=n_coord_site,  
-                           group=treatment, 
-                           fill=treatment,
-                           pch=treatment,
-                           color=treatment),
-             #color="black", 
-             #pch=21, 
-             alpha=0.8,
-             size=2)+  
-  scale_fill_viridis_d(name = "treatment")+ # add color gradient
-  scale_color_viridis_d(name = "treatment")+
-  #scale_fill_gradient(name = "Number of years",trans="log",low = "blue", high = "red")+
-  # scale_size_continuous(name="Number of years",range=c(2,8),
-  #                       breaks=c(2,4,6),
-  #                       labels=c(4,8,12))+
+  # Adds points for all treatments except "OTCxSNOWFENCE"
+  geom_point(data=subset(unique_data, treatment != "CTL" & treatment != "OTCxSNOWFENCE"), aes(x=e_coord_site, y=n_coord_site,   
+              group=treatment, 
+              fill=treatment,
+              pch=treatment  # Map the shape to the new shape column
+              ),
+       color="black",
+       alpha=0.6,
+       size=3) +  
   
-  # geom_hline(yintercept = 66.33487, linetype = "solid", color="black", alpha=0.5)+
-  # annotate("text", x=165, y = 70, color = "black", label = "ARCTIC CIRCLE", size=3.5)+
+  # Adds points for "OTCxSNOWFENCE" with no transparency
+  geom_point(data=subset(unique_data, treatment == "OTCxSNOWFENCE"), aes(x=e_coord_site, y=n_coord_site,   
+              group=treatment, 
+              fill=treatment,
+            pch=treatment  # Map the shape to the new shape column
+              ),
+       color="black",
+       alpha=1,  # No transparency
+       size=3.2) +  
   
+  # geom_point(data=subset(unique_data, treatment != "CTL"), aes(x=e_coord_site, y=n_coord_site,   
+  #             group=treatment, 
+  #             fill=treatment,
+  #             pch=treatment  # Map the pch to the new shape column
+  #             ),
+  #      color="black",
+  #      alpha=0.6,
+  #      size=3) +  
+  scale_fill_viridis_d(name = "treatment", limits =c("OTC","OTCxSNOWFENCE","SNOWFENCE"), direction=-1) + # add color gradient
+  scale_shape_manual(values = c(21, 22, 24), limits =c("OTC","OTCxSNOWFENCE","SNOWFENCE")) +  # Define the shapes manually
   
   # Removes Axes and labels
   scale_x_continuous(breaks = NULL) +
   xlab("") +
   ylab("") +
   
-  
   # Adds labels
   geom_text(aes(x = 180, y = seq(45, 85, by = 20), hjust = -0.2, label = paste0(seq(45, 85, by = 20), "°N"))) +
   geom_text(aes(x = x_lines, y = 15, label = c("120°W", "60°W", "0°", "60°E", "120°E", "180°W"))) +
-  # geom_hline(yintercept = 66.33487, linetype = "dashed", color="black", alpha=0.5)+
-  # annotate("text", x=165, y = 70, color = "black", label = "ARCTIC CIRCLE", size=3.5)+
   
   # Adds axes
-  # geom_hline(aes(yintercept = 10), size = 0.8) +  # make it round?
   geom_segment(aes(y = 10, yend = 90, x = x_lines, xend = x_lines), linetype = "dashed") +
   
   # Change theme to remove axes and ticks
   theme(panel.background = element_blank(),
-        panel.grid.major = element_line(size = 0.25, linetype = 'dashed',
-                                        colour = "darkgrey"),
-        axis.ticks=element_blank(),
-        legend.position = "top") 
-
-
+    panel.grid.major = element_line(size = 0.25, linetype = 'dashed',
+                    colour = "darkgrey"),
+    axis.ticks=element_blank(),
+    legend.position = "top") 
 
 ```
 
