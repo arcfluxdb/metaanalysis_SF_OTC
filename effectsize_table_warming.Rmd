@@ -468,7 +468,5 @@ PF_site <- dplyr::left_join(PF_data_site, contacts_flux_data, by = "site_id")
 
 write.csv(PF_site, "PF_site.csv")
 
-
-
 ```
 
