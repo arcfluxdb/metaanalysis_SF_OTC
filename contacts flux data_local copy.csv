@@ -1,0 +1,79 @@
+site_id,Site_Name,Contacts,Emails,Institute
+ALA_1,Eight Mile Lake Alaska_CiPEHR,"Ted Schuur, Heidi Rodenhizer","Ted.Schuur@nau.edu, hgr7@nau.edu",Northern Arizona University
+ALA_2,Toolik_2015,"Tom Parker, Ned Fetcher, Jim Tang","thomas.parker1361@gmail.com, ned.fetcher@wilkes.edu, jtang@mbl.edu",University of Stirling
+ALA_3,Toolik_2016,"Tom Parker, Ned Fetcher, Jim Tang","thomas.parker1361@gmail.com, ned.fetcher@wilkes.edu, jtang@mbl.edu",University of Stirling
+ALA_4,Ice Cut,"Ellen Dorrepaal, Josefine Walz, Konstantin Gavazov","ellen.dorrepaal@umu.se, josefine.walz@umu.se, konstantin.gavazov@wsl.ch",Ume† University
+ALA_5,Barrow Dry,"Steve Oberbauer, Katlyn R. Betway, Jeremy May","oberbaue@fiu.edu, betwayk@mail.gvsu.edu, jmay010@fiu.edu",Grand Valley State University
+ALA_6,Barrow Wet,"Steve Oberbauer, Katlyn R. Betway, Jeremy May","oberbaue@fiu.edu, betwayk@mail.gvsu.edu, jmay010@fiu.edu",Grand Valley State University
+ALA_7,Atqasuk Dry,"Steve Oberbauer, Katlyn R. Betway, Jeremy May","oberbaue@fiu.edu, betwayk@mail.gvsu.edu, jmay010@fiu.edu",Grand Valley State University
+ALA_8,Atqasuk Wet,"Steve Oberbauer, Katlyn R. Betway, Jeremy May","oberbaue@fiu.edu, betwayk@mail.gvsu.edu, jmay010@fiu.edu",Grand Valley State University
+AUS_1,Silver Plains,Mark Hovenden,Mark.Hovenden@utas.edu.au,University of Tasmania
+CAN_1,Daring Lake SNOWFENCES,"Casper T. Christiansen, Paul Grogan","christiansen.ct@gmail.com, groganp@queensu.ca",University of Copenhagen
+CAN_2,Control (Pristine),"Tariq Munir, Maria Strack","tmmunir@ucalgary.ca, mstrack@uwaterloo.ca",University of Calgary
+CAN_3,Experimental (Short-term drained),"Tariq Munir, Maria Strack","tmmunir@ucalgary.ca, mstrack@uwaterloo.ca",University of Calgary
+CAN_4,Drained (old drained),"Tariq Munir, Maria Strack","tmmunir@ucalgary.ca, mstrack@uwaterloo.ca",University of Calgary
+CAN_5,Cambridge Bay OTC,"Ji Young Jung, Mats P. Bj”rkman, Minjung Kwon","jyjung@kopri.re.kr, mats.bjorkman@gu.se, minjung.kwon86@gmail.com",Korea Polar Research Institute
+CAN_6,Cambridge Bay Snowfence,"Ji Young Jung, Minjung Kwon","jyjung@kopri.re.kr, minjung.kwon86@gmail.com",Korea Polar Research Institute
+CHI_1,Haibei_1,"Jin-Sheng He, Zhen-huan Guan","jshe@pku.edu.cn, guanzhh13@lzu.edu.cn",Peking University
+CHI_2,Haibei_2,"Jin-Sheng He, Zhen-huan Guan","jshe@pku.edu.cn, guanzhh13@lzu.edu.cn",Peking University
+CHI_3,Haibei_3,"Jin-Sheng He, Zhen-huan Guan","jshe@pku.edu.cn, guanzhh13@lzu.edu.cn",Peking University
+CHI_4,Gangca,Yuanhe Yang,yhyang@ibcas.ac.cn,"Institute of Botany, Chinese Academy of Sciences"
+FIN_1,Kilpisj„rvi,"Anne Tolvanen, Sari Stark","anne.tolvanen@luke.fi, sari.stark@ulapland.fi",Natural Resource Institute Finland
+GRE_1,"Bl‘sedalen, Dry heath","Anders Michelsen, Bo Elberling, Nynne R. Ravn, Ludovia D'Imperio","andersm@bio.ku.dk, be@ign.ku.dk, nynnemarie@gmail.com, ldi@ign.ku.dk",University of Copenhagen
+GRE_2,"Bl‘sedalen, Wet tundra","Anders Michelsen, Bo Elberling, Cecilie Skov Nielsen","andersm@bio.ku.dk, be@ign.ku.dk, cesn@seges.dk",University of Copenhagen
+GRE_3,"Bl‘sedalen, Bare ground","Anders Michelsen, Bo Elberling, Ludovica D'Imperio","andersm@bio.ku.dk, be@ign.ku.dk, ldi@ign.ku.dk",University of Copenhagen
+GRE_4,"Zackenberg, Cassiope heath tundra","Anders Michelsen, Riikka Rinnan, Niels Martin Schmidt, Ingvild Ryde","andersm@bio.ku.dk, riikkar@bio.ku.dk, nms@bios.au.dk, ingvild.ryde@bio.ku.dk",University of Copenhagen
+GRE_5,"Zackenberg, Salix heath tundra","Anders Michelsen, Riikka Rinnan, Niels Martin Schmidt, Ingvild Ryde","andersm@bio.ku.dk, riikkar@bio.ku.dk, nms@bios.au.dk, ingvild.ryde@bio.ku.dk",University of Copenhagen
+GRE_6,Kobbefjord,Katrine Raundrup,kara@natur.gl,Greenland Institute of Natural Resources
+ICE_1,ITEX Audkuluheidi,"Ingibj”rg Svala J¢nsd¢ttir, J¢n GuÐmundsson, Hlynur àskarsson","isj@hi.is, jong@lbhi.is, hlynur@lbhi.is",University of Iceland
+ITA_1,G1_1,Michele Carbognani,michele.carbognani@unipr.it,University of Parma
+ITA_2,G1_2,Michele Carbognani,michele.carbognani@unipr.it,University of Parma
+ITA_3,G2_1,Alessandro Petraglia,alessandro.petraglia@unipr.it,University of Parma
+ITA_4,G2_2,Alessandro Petraglia,alessandro.petraglia@unipr.it,University of Parma
+ITA_5,G3,"T'ai GW Forte, Giorgio Chiari","tai.forte@unipr.it, giorgio.chiari@unipr.it",University of Parma
+NOR_1,Raisduoddar,"Sari Stark, Maria V„is„nen, Henni Yl„nne, Elina Kaarlej„rvi","sari.stark@ulapland.fi, maria.vaisanen@oulu.fi, elina.kaarlejarvi@helsinki.fi, henni.ylanne@cec.lu.se",University of Lapland
+NOR_2,Dovre_DART_Upper Tundra,"Annika Hofgaard, Sofie Sj”gersten, (Johan Olofsson)","annika.hofgaard@nina.no, sofie.sjogersten@nottingham.ac.uk",Norwegian Institute for Nature Research
+NOR_3,Dovre_DART_Upper Forest,"Annika Hofgaard, Sofie Sj”gersten, (Johan Olofsson)","annika.hofgaard@nina.no, sofie.sjogersten@nottingham.ac.uk",Norwegian Institute for Nature Research
+NOR_4,Dovre_DART_Lower Tundra,"Annika Hofgaard, Sofie Sj”gersten, (Johan Olofsson)","annika.hofgaard@nina.no, sofie.sjogersten@nottingham.ac.uk",Norwegian Institute for Nature Research
+NOR_5,Dovre_DART_Lower Forest,"Annika Hofgaard, Sofie Sj”gersten, (Johan Olofsson)","annika.hofgaard@nina.no, sofie.sjogersten@nottingham.ac.uk",Norwegian Institute for Nature Research
+NOR_6,Iskoras vegetated palsa,"Casper T. Christiansen, Hanna Lee, Inge Althuizen","christiansen.ct@gmail.com, HALE@NORCERESEARCH.NO, ialt@norceresearch.no",University of Copenhagen
+NOR_7,Iskoras bare soil palsa,"Casper T. Christiansen, Hanna Lee, Inge Althuizen","christiansen.ct@gmail.com, HALE@NORCERESEARCH.NO, ialt@norceresearch.no",University of Copenhagen
+NOR_8,Iskoras thaw slump,"Casper T. Christiansen, Hanna Lee, Inge Althuizen","christiansen.ct@gmail.com, HALE@NORCERESEARCH.NO, ialt@norceresearch.no",University of Copenhagen
+NOR_9,INCLINE_Lavisdalen,"Joseph Gaudard, Vigdis Vandvik","joseph.gaudard@uib.no, Vigdis.Vandvik@uib.no",University of Bergen
+NOR_10,INCLINE_Ulvhaugen,"Joseph Gaudard, Vigdis Vandvik","joseph.gaudard@uib.no, Vigdis.Vandvik@uib.no",University of Bergen
+NOR_11,INCLINE_Gudmesdalen,"Joseph Gaudard, Vigdis Vandvik","joseph.gaudard@uib.no, Vigdis.Vandvik@uib.no",University of Bergen
+NOR_12,INCLINE_Skjellingahaugen,"Joseph Gaudard, Vigdis Vandvik","joseph.gaudard@uib.no, Vigdis.Vandvik@uib.no",University of Bergen
+NOR_13,Joatka_DART_Upper Tundra,"Sofie Sj”gersten, Phil Wookey, Johan Olofsson","Sofie.Sjogersten@nottingham.ac.uk, philip.wookey1@stir.ac.uk, johan.olofsson@umu.se",University of Nottingham
+NOR_14,Joatka_DART_Upper Forest,"Sofie Sj”gersten, Phil Wookey, Johan Olofsson","Sofie.Sjogersten@nottingham.ac.uk, philip.wookey1@stir.ac.uk, johan.olofsson@umu.se",University of Nottingham
+NOR_15,Joatka_DART_Lower Tundra,"Sofie Sj”gersten, Phil Wookey, Johan Olofsson","Sofie.Sjogersten@nottingham.ac.uk, philip.wookey1@stir.ac.uk, johan.olofsson@umu.se",University of Nottingham
+NOR_16,Joatka_DART_Lower Forest,"Sofie Sj”gersten, Phil Wookey, Johan Olofsson","Sofie.Sjogersten@nottingham.ac.uk, philip.wookey1@stir.ac.uk, johan.olofsson@umu.se",University of Nottingham
+RUS_1,Seida mineral,"Christina Biasi, Maija Maruschak, Carolina Voigt, Richard Lamprecht","christina.biasi@uef.fi, maija.e.marushchak@jyu.fi, Richard.Lamprecht@uef.fi, Carolina.Voigt@uef.fi",University of Eastern Finland
+RUS_2,Seida peat shrubs,"Christina Biasi, Maija Maruschak, Carolina Voigt, Richard Lamprecht","christina.biasi@uef.fi, maija.e.marushchak@jyu.fi, Richard.Lamprecht@uef.fi, Carolina.Voigt@uef.fi",University of Eastern Finland
+RUS_3,Seida peat barren,"Christina Biasi, Maija Maruschak, Carolina Voigt, Richard Lamprecht","christina.biasi@uef.fi, maija.e.marushchak@jyu.fi, Richard.Lamprecht@uef.fi, Carolina.Voigt@uef.fi",University of Eastern Finland
+SVA_1,HERBWARTUNDRA project_1,"Matteo Petit Bon, Ingibj”rg Svala J¢nsd¢ttir, Hanna Bohner","matteo.petitbon@gmail.com, isj@hi.is, hanna.bohner@uit.no","The University Centre in Svalbard, The Arctic University of Norway"
+SVA_2,HERBWARTUNDRA project_2,"Matteo Petit Bon, Ingibj”rg Svala J¢nsd¢ttir, Hanna Bohner","matteo.petitbon@gmail.com, isj@hi.is, hanna.bohner@uit.no","The University Centre in Svalbard, The Arctic University of Norway"
+SVA_3,HERBWARTUNDRA project_3,"Matteo Petit Bon, Ingibj”rg Svala J¢nsd¢ttir, Hanna Bohner","matteo.petitbon@gmail.com, isj@hi.is, hanna.bohner@uit.no","The University Centre in Svalbard, The Arctic University of Norway"
+SVA_4,INSYNC project,"Mathilde Le Moulec, Matteo Petit Bon, Brage Bremset Hansen","mathilde.lemoullec@ntnu.no, matteo.petitbon@gmail.com, Brage.b.hansen@ntnu.no","Norwegian University of Science and Technology, Centre for Biodiversity Dynamics, Dept. Biology"
+SVA_5,Adventdalen Wet,"Elisabeth J. Cooper, Bo Elberling, Sofie Sjogersten","elisabeth.cooper@uit.no, be@ign.ku.dk, Sofie.Sjogersten@nottingham.ac.uk",UiT The Arctic University of Norway
+SVA_6,Adventdalen Mesic,"Elisabeth J. Cooper, Bo Elberling, Sofie Sjogersten","elisabeth.cooper@uit.no, be@ign.ku.dk, Sofie.Sjogersten@nottingham.ac.uk",UiT The Arctic University of Norway
+SVA_7,ITEX Svalbard_1,"Ingibj”rg Svala J¢nsd¢ttir, Casper Christiansen, Siri V. Haugum, Inge Althuizen","isj@hi.is, christiansen.ct@gmail.com, siri.haugum@gmail.com, ialt@norceresearch.no",University of Iceland
+SVA_8,ITEX Svalbard_2,"Ingibj”rg Svala J¢nsd¢ttir, Casper Christiansen, Siri V. Haugum, Inge Althuizen","isj@hi.is, christiansen.ct@gmail.com, siri.haugum@gmail.com, ialt@norceresearch.no",University of Iceland
+SVA_9,ITEX Svalbard_3,"Ingibj”rg Svala J¢nsd¢ttir, Casper Christiansen, Siri V. Haugum, Inge Althuizen","isj@hi.is, christiansen.ct@gmail.com, siri.haugum@gmail.com, ialt@norceresearch.no",University of Iceland
+SWE_1,Latnjajaure - ITEX_1,Mats P. Bj”rkman,mats.bjorkman@gu.se,"Dept. Earth Sciences, University of Gothenburg"
+SWE_2,Latnjajaure - ITEX_2,Mats P. Bj”rkman,mats.bjorkman@gu.se,"Dept. Earth Sciences, University of Gothenburg"
+SWE_3,Latnjajaure - ITEX_3,Mats P. Bj”rkman,mats.bjorkman@gu.se,"Dept. Earth Sciences, University of Gothenburg"
+SWE_4,Latnjajaure - ITEX_4,Mats P. Bj”rkman,mats.bjorkman@gu.se,"Dept. Earth Sciences, University of Gothenburg"
+SWE_5,Latnjajaure - ITEX_5,Mats P. Bj”rkman,mats.bjorkman@gu.se,"Dept. Earth Sciences, University of Gothenburg"
+SWE_6,Multe,"Anders Michelsen, Riikka Rinnan, Emily Pickering Pedersen","andersm@bio.ku.dk, riikkar@bio.ku.dk, epickering.pedersen@bio.ku.dk",University of Copenhagen
+SWE_7,Paddus_1,"Anders Michelsen, Riikka Rinnan, Nynne R. Ravn","andersm@bio.ku.dk, riikkar@bio.ku.dk, nynnemarie@gmail.com",University of Copenhagen
+SWE_11,Nissunjokka canyon_3,Johan Olofsson,johan.olofsson@umu.se,Ume† University
+SWE_12,Paddus_DART_Upper Tundra,"Sofie Sjogersten, Johan Olofsson, Sari Stark, Minna Mannisto, Myrsky Eero","sofie.sjogersten@nottingham.ac.uk, johan.olofsson@umu.se, sari.stark@ulapland.fi, minna.mannisto@luke.fi, Eero.Myrsky@ulapland.fi","Ume† University, Uni of Nottingham, Natural Resources Insitute Finland"
+SWE_13,Paddus_DART_Upper Forest,"Sofie Sjogersten, Johan Olofsson","sofie.sjogersten@nottingham.ac.uk, johan.olofsson@umu.se","Ume† University, Uni of Nottingham, Natural Resources Insitute Finland"
+SWE_14,Paddus_DART_ Lower Tundra,"Sofie Sjogersten, Johan Olofsson","sofie.sjogersten@nottingham.ac.uk, johan.olofsson@umu.se","Ume† University, Uni of Nottingham, Natural Resources Insitute Finland"
+SWE_15,Paddus_DART_Lower Forest,"Sofie Sjogersten, Johan Olofsson, Sari Stark, Minna Mannisto, Myrsky Eero","sofie.sjogersten@nottingham.ac.uk, johan.olofsson@umu.se, sari.stark@ulapland.fi, minna.mannisto@luke.fi, Eero.Myrsky@ulapland.fi","Ume† University, Uni of Nottingham, Natural Resources Insitute Finland"
+SWE_16,Abisko bog,"Hans Cornelissen, Ellen Dorrepaal, Richard Van Logtestijn, Caithlin Hicks Pries, Sylvia Toet, Rien Aerts","j.h.c.cornelissen@vu.nl, ellen.dorrepaal@umu.se, richard.van.logtestijn@vu.nl, Caitlin.Hicks.Pries@dartmouth.edu, sylvia.toet@york.ac.uk, m.a.p.a.aerts@vu.nl",VU University Amsterdam
+SWE_17,Non-sorted circles/Suorooaivi_Heath,"Maria Vaisanen, Konstantin Gavazov, Eveline Krab, Sylvain Monteux","maria.vaisanen@oulu.fi, konstantin.gavazov@wsl.ch, eveline.krab@slu.se, sylvain.monteux@aces.su.se","University of Oulu, Finland"
+SWE_18,Non-sorted circles/Suorooaivi_Barren ground,"Maria Vaisanen, Konstantin Gavazov, Eveline Krab, Sylvain Monteux","maria.vaisanen@oulu.fi, konstantin.gavazov@wsl.ch, eveline.krab@slu.se, sylvain.monteux@aces.su.se","University of Oulu, Finland"
+SWE_19,WARM High Abisko,"Maja Sundqvist, Ellen Dorrepaal, Paul Kardol, Daniel Metcalfe","Maja.Sundqvist@slu.se, ellen.dorrepaal@umu.se, paul.kardol@slu.se, daniel.metcalfe@umu.se",Swedish University of Agricultural Sciences
+SWI_1,Stillberg Low Site,"Chelsea Chisholm, Christian Rixen, Sonja Wipf","chelsea.chisholm@gmail.com, rixen@slf.ch, sonja.wipf@slf.ch",WSL
+SWI_2,Stillberg High Site,"Chelsea Chisholm, Christian Rixen, Sonja Wipf","chelsea.chisholm@gmail.com, rixen@slf.ch, sonja.wipf@slf.ch",WSL

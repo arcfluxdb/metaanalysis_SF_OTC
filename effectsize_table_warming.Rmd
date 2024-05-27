@@ -453,3 +453,22 @@ map <- ggplot() +
 
 ```
 
+
+```{r PF categories for Mats}
+
+#Mats needs: permafrost layers, site id_site_name; coordinates; vegetation on plot level 
+PF_data_plot <- distinct(working_data, site_id, year, plot_id, e_coord_site, n_coord_site, treatment, veg_type_site, veg_class_site, pf_site)  
+PF_data_site <- distinct(working_data, site_id, year, e_coord_site, n_coord_site, treatment, veg_type_site, veg_class_site, pf_site) 
+
+contacts_flux_data <- read_csv("contacts flux data_local copy.csv")
+
+#merge site_name; larger site name and site_id
+PF_plot <- dplyr::left_join(PF_data_plot, contacts_flux_data, by = "site_id")
+PF_site <- dplyr::left_join(PF_data_site, contacts_flux_data, by = "site_id")
+
+write.csv(PF_site, "PF_site.csv")
+
+
+
+```
+
