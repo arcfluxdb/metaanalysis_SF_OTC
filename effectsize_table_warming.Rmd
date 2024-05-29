@@ -243,36 +243,6 @@ orchard_plot(model_OTC, mod = "site_id", group = "site_id",
         legend.position="bottom",
         legend.title = element_text(size =10),
         legend.text = element_text(size = 10))
-# #GS
-# OTC_GS <- rma.mv(yi_otc, vi_otc, 
-#                 random=list(~ 1 | site_id, 
-#                             ~ year | site_id), 
-#                 struct="CAR", 
-#                 data=subset(otc_effect_sizes, monthseason=="GS",)
-# )
-# 
-# forest(OTC_GS)
-# summary(OTC_GS)
-# predict(OTC_GS)
-# #NGS
-# OTC_NGS <- rma.mv(yi_otc, vi_otc, 
-#                 random=list(~ 1 | site_id, 
-#                             ~ year | site_id), 
-#                 struct="CAR", 
-#                 data=subset(otc_effect_sizes, monthseason=="NGS",)
-# )
-# summary(OTC_NGS)
-# predict(OTC_NGS)
-# #Shoulder
-# OTC_sh <- rma.mv(yi_otc, vi_otc, 
-#                 random=list(~ 1 | site_id, 
-#                             ~ year | site_id), 
-#                 struct="CAR", 
-#                 data=subset(otc_effect_sizes, monthseason=="Shoulder",)
-# )
-# summary(OTC_sh)
-# forest(OTC_sh)
-# predict(OTC_sh)
 
 ```
 http://127.0.0.1:35789/graphics/plot_zoom_png?width=1200&height=900
@@ -309,37 +279,6 @@ orchard_plot(model_OTC_SF, mod = "site_id", group = "site_id",
         legend.position="bottom",
         legend.title = element_text(size =10),
         legend.text = element_text(size = 10))
-
-# #GS
-# OTC_SF_GS <- rma.mv(yi_otc_sf, vi_otc_sf,  
-#                 random=list(~ 1 | site_id, 
-#                             ~ year | site_id), 
-#                 struct="CAR", 
-#                 data=subset(otc_sf_effect_sizes, monthseason=="GS",)
-# )
-# 
-# forest(OTC_SF_GS)
-# summary(OTC_SF_GS)
-# predict(OTC_SF_GS)
-# #NGS
-# OTC_SF_NGS <- rma.mv(yi_otc_sf, vi_otc_sf, 
-#                 random=list(~ 1 | site_id, 
-#                             ~ year | site_id), 
-#                 struct="CAR", 
-#                 data=subset(otc_sf_effect_sizes, monthseason=="NGS",)
-# )
-# summary(OTC_SF_NGS)
-# predict(OTC_SF_NGS)
-# #Shoulder
-# OTC_SF_sh <- rma.mv(yi_otc_sf, vi_otc_sf,  
-#                 random=list(~ 1 | site_id, 
-#                             ~ year | site_id), 
-#                 struct="CAR", 
-#                 data=subset(otc_sf_effect_sizes, monthseason=="Shoulder",)
-# )
-# summary(OTC_SF_sh)
-# forest(OTC_SF_sh)
-# predict(OTC_SF_sh)
 
 ```
 ## MAP
@@ -469,4 +408,75 @@ PF_site <- dplyr::left_join(PF_data_site, contacts_flux_data, by = "site_id")
 write.csv(PF_site, "PF_site.csv")
 
 ```
+```{r}
+library(RColorBrewer)
+ggplot(subset(working_data, treatment!="CTL"), aes(x = as.factor(treatment), y = co2, fill=treatment)) +
+  geom_col() +  # Adjust fill color as desired
+  scale_fill_brewer(palette = "BuPu")+
+  coord_polar()+  # Transform to circular coordinates
+  theme_minimal()
+
+ggplot(effect_df, aes(x = site_id, y = mean_sf, fill=site_id)) +
+  geom_col() +  # Adjust fill color as desired
+  scale_fill_brewer(palette = "BuPu")+
+  coord_polar()+  # Transform to circular coordinates
+  theme_minimal()
+
+```
+```{r}
+
+Hermesdorf<- read_csv("~/1_projects and publications/4_flux data/1_winter flux data/4_new data/extract from literature/GCB_Hermesdorf_et_al.csv")
+# Function to convert mg CO2/m²/h to g C-CO2/m²/d
+convert_respiration <- function(mg_CO2_per_m2_per_h) {
+  # Conversion factors
+  mg_to_g <- 1 / 1000                # 1000 mg in a gram
+  hours_per_day <- 24                # 24 hours in a day
+  fraction_C_in_CO2 <- 12 / 44       # Molecular weight ratio of C to CO2
+  
+  # Conversion calculation
+  g_C_CO2_per_m2_per_d <- mg_CO2_per_m2_per_h * mg_to_g * hours_per_day * fraction_C_in_CO2
+  
+  return(g_C_CO2_per_m2_per_d)
+}
+
+# Example usage
+mg_CO2_per_m2_per_h <- 245.916  # Replace with your value
+g_C_CO2_per_m2_per_d <- convert_respiration(mg_CO2_per_m2_per_h)
+cat(mg_CO2_per_m2_per_h, "mg CO2/m²/h is equivalent to", g_C_CO2_per_m2_per_d, "g C-CO2/m²/d\n")
+
+## Tranform the whole coloumn
+# Load necessary library
+
+# Function to convert mg CO2/m²/h to g C-CO2/m²/d
+convert_respiration <- function(mg_CO2_per_m2_per_h) {
+  # Conversion factors
+  mg_to_g <- 1 / 1000                # 1000 mg in a gram
+  hours_per_day <- 24                # 24 hours in a day
+  fraction_C_in_CO2 <- 12 / 44       # Molecular weight ratio of C to CO2
+  
+  # Conversion calculation
+  g_C_CO2_per_m2_per_d <- mg_CO2_per_m2_per_h * mg_to_g * hours_per_day * fraction_C_in_CO2
+  
+  return(g_C_CO2_per_m2_per_d)
+}
+
+# Apply conversion function to the entire column
+data <- Hermesdorf %>%
+  mutate(g_C_CO2_per_m2_per_d = sapply(ER, convert_respiration))
+
+# Print the updated data frame
+write.csv(data, "~/1_projects and publications/4_flux data/1_winter flux data/4_new data/extract from literature/ER_tranformed_Hermesdorf_et_al.csv")
+
+ggplot(subset(all_data_230823, treatment !="CTL"), aes(x = treatment, y = co2)) +
+  geom_col(fill = "steelblue") +  # Adjust fill color as desired
+  coord_polar()+  # Transform to circular coordinates
+  theme_minimal()
+
+plyr::count(all_data_230823$c_loss)
+plyr::count(working_data$c_loss)
+plyr::count(working_data$treatment)
+
+
+```
+
 
