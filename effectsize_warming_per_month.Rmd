@@ -22,7 +22,7 @@ working_data$month <- month(working_data$flux_date)
 
 
 working_data$month <- month(working_data$flux_date)
-
+working_data$doy <- yday(working_data$flux_date)
 
 working_data$monthseason <- ifelse(working_data$month <= 3,"NGS",
                                    ifelse(working_data$month <= 5, "Shoulder",
@@ -45,7 +45,7 @@ ggplot(working_data[working_data$site_id != "ALA_1",]) +
   theme_classic()
 ```
 ```{r treatments}
-ggplot(working_data[working_data$site_id != "ALA_1" & working_data$treatment %in% c("SNOWFENCE","OTCxSNOWFENCE"),]) +
+ggplot(working_data[working_data$treatment %in% c("SNOWFENCE","OTCxSNOWFENCE"),]) +
   geom_bar(aes(x=treatment,fill=site_id),stat = "count") + 
   scale_fill_viridis_d(option = "turbo")+
   theme_classic()
@@ -311,8 +311,8 @@ ggplot(stacked_effect, aes(x = as.factor(month), y = effectsize, fill = treatmen
 ```
 
 ```{r}
-
-duration <- full_data[,grep("site_id|(?<!_)year|er_duration",colnames(full_data),value = TRUE, perl = TRUE)]
+colnames(working_data)
+duration <- working_data[,grep("site_id|(?<!_)year|er_duration",colnames(working_data),value = TRUE, perl = TRUE)]
 
 stacked_effect_length <- distinct(merge(stacked_effect,
                         duration,
@@ -328,14 +328,130 @@ stacked_effect_length$duration <- ifelse(stacked_effect_length$er_duration_metho
                                          
 
 ggplot(stacked_effect_length)+
-  geom_boxplot(aes(x=as.factor(month), y = effectsize, fill = treatment), alpha = 0.5)+
-  facet_wrap(~duration)+
+  geom_point(aes(x=er_duration_method, y = effectsize, color = treatment), alpha = 0.5)+
+  geom_smooth(aes(x=er_duration_method, y = effectsize, color = treatment),method="lm")+
   theme_classic()
 ```
 
+```{r preps}
+dayly <- working_data %>%
+  group_by(site_id,year,flux_julian_day) %>% 
+  dplyr::summarise(n_ctl = sum(treatment == "CTL",na.rm=T),
+                   n_otc = sum(treatment == "OTC",na.rm=T),
+                   n_sf = sum(treatment == "SNOWFENCE",na.rm=T),
+                   n_otc_sf = sum(treatment == "OTCxSNOWFENCE",na.rm=T),
+                   m_ctl = mean(co2[treatment == "CTL"],na.rm=T),
+                   m_otc = mean(co2[treatment == "OTC"],na.rm=T),
+                   m_sf = mean(co2[treatment == "SNOWFENCE"],na.rm=T),
+                   m_otc_sf = mean(co2[treatment == "OTCxSNOWFENCE"],na.rm=T),
+                   s_ctl = sd(co2[treatment == "CTL"],na.rm=T),
+                   s_otc = sd(co2[treatment == "OTC"],na.rm=T),
+                   s_sf = sd(co2[treatment == "SNOWFENCE"],na.rm=T),
+                   s_otc_sf = sd(co2[treatment == "OTCxSNOWFENCE"],na.rm=T))
+
+dayly_otc <- dayly %>% filter(!is.na(m_otc))
+dayly_otc <- dayly_otc[,-c(grep("sf",colnames(dayly_otc)))]
+
+dayly_sf <- dayly %>% filter(!is.na(m_sf))
+dayly_sf <- dayly_sf[,-c(grep("otc",colnames(dayly_sf)))]
+
+dayly_otc_sf <- dayly %>% filter(!is.na(m_otc_sf))
+dayly_otc_sf <- dayly_otc_sf[,c(1,2,3,c(grep("ctl|otc_sf",colnames(dayly_otc_sf))))]
+
+
+```
+
+```{r effectsize calc}
+otc_effect_sizes <-
+  escalc( # This is the function in metafor that allows us to calculate an effect size for each row in a database
+    "SMD",
+    # Specify the effect size we want to calculate. In this case SMD for Standardized mean difference
+    m1i = m_otc,
+    # mean richness at invaded sites
+    n1i = n_otc,
+    # invaded site sample size
+    sd1i = s_otc,
+    # invaded site SD
+    m2i = m_ctl,
+    # mean richness at control sites
+    n2i = n_ctl,
+    # control site sample size
+    sd2i = s_ctl,
+    # control site SD
+    data = dayly_otc # This is where the escalc function can find all the data for our meta-analysis
+  )
+
+colnames(otc_effect_sizes) <- gsub("yi", "yi_otc",colnames(otc_effect_sizes))
+colnames(otc_effect_sizes) <- gsub("vi", "vi_otc",colnames(otc_effect_sizes))
+
+sf_effect_sizes <-
+  escalc( # This is the function in metafor that allows us to calculate an effect size for each row in a database
+    "SMD",
+    # Specify the effect size we want to calculate. In this case SMD for Standardized mean difference
+    m1i = m_sf,
+    # mean richness at invaded sites
+    n1i = n_sf,
+    # invaded site sample size
+    sd1i = s_sf,
+    # invaded site SD
+    m2i = m_ctl,
+    # mean richness at control sites
+    n2i = n_ctl,
+    # control site sample size
+    sd2i = s_ctl,
+    # control site SD
+    data = monthly_sf # This is where the escalc function can find all the data for our meta-analysis
+  )
+
+colnames(sf_effect_sizes) <- gsub("yi", "yi_sf",colnames(sf_effect_sizes))
+colnames(sf_effect_sizes) <- gsub("vi", "vi_sf",colnames(sf_effect_sizes))
+
+otc_sf_effect_sizes <-
+  escalc( # This is the function in metafor that allows us to calculate an effect size for each row in a database
+    "SMD",
+    # Specify the effect size we want to calculate. In this case SMD for Standardized mean difference
+    m1i = m_otc_sf,
+    # mean richness at invaded sites
+    n1i = n_otc_sf,
+    # invaded site sample size
+    sd1i = s_otc_sf,
+    # invaded site SD
+    m2i = m_ctl,
+    # mean richness at control sites
+    n2i = n_ctl,
+    # control site sample size
+    sd2i = s_ctl,
+    # control site SD
+    data = monthly_otc_sf # This is where the escalc function can find all the data for our meta-analysis
+  )
+```
+
 ```{r}
+full_effect_size <- merge(otc_effect_sizes[,c(1,2,3,10,11)],
+                          sf_effect_sizes[,c(1,2,3,10,11)],
+                          by = c("site_id", "year", "flux_julian_day"),
+                          all = T)
 
-View(working_data[working_data$month == 1,])
+full_effect_size <- merge(full_effect_size ,
+                          otc_sf_effect_sizes[,c(1,2,3,10,11)],
+                          by = c("site_id", "year", "flux_julian_day"),
+                          all = T)
 
+stacked_effect <- full_effect_size %>% 
+  gather(treatment, effectsize, yi_otc,yi_sf,yi_otc_sf)
+
+```
+
+
+```{r}
+ggplot(full_effect_size)+
+  geom_boxplot(aes(x=as.factor(month),y=yi_otc_sf),fill="red",alpha=0.8, varwidth = T)+
+  geom_boxplot(aes(x=as.factor(month),y=yi_otc),fill="lightgreen",alpha=0.8, varwidth = T)+
+  geom_boxplot(aes(x=as.factor(month),y=yi_sf),fill="lightblue",alpha=0.8, varwidth = T)
+```
+
+
+```{r}
+working_data$er_machine_type_method
 ```
 
