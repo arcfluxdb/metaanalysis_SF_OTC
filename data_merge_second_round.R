@@ -39,8 +39,8 @@ folder <- "D:/flux_db/Working_folder/2_second round_2023/"
 files <- dir(folder,
              pattern = ".xlsx")
 
-#file <- files[55]
-file <- files[3]
+file <- "SVA_1_2016.xlsx" 
+file <- files[93]
 
 sites <- data.frame()
 methods <- data.frame()
@@ -116,6 +116,22 @@ for (file in files){
   colnames(flux_data)[colnames(flux_data)=="r2"] <- "co2_raw_r2"
   colnames(flux_data)[colnames(flux_data)=="r2_2"] <- "ch4_raw_r2"
   # change columns for soiltemp and soilmosi ----
+  
+  
+  if ("soil_temp_19" %in% colnames(flux_data)){
+    colnames(flux_data) <- gsub("_19","",colnames(flux_data))
+    flux_data$soil_temp_20[3] <- "°C"
+    colnames(flux_data) <- gsub("soil_temp_20", "soil_temp_1",colnames(flux_data))
+    flux_data <- add_column(flux_data,
+                            soil_temp_1_unit = rep(flux_data$soil_temp_1[3],
+                                                 length(flux_data$site_id_automatic)),
+                            .after = "soil_temp_1")
+    
+    flux_data <- add_column(flux_data,
+                            soil_temp_1_depth = rep(flux_data$soil_temp_1[5],
+                                                  length(flux_data$site_id_automatic)),
+                            .after = "soil_temp_1_unit")
+   }
   
   flux_data <- add_column(flux_data,
                           par_unit = rep(flux_data$par[3],
@@ -383,7 +399,7 @@ for (file in files){
     #   flux_data$ch4 <- -as.numeric(flux_data$ch4)
     # }
     
-    if (unitch4 == "g CH4 m-2 h-1"){
+    if (unitch4 == "g CH4 m-2 h-1"| unitch4 == "g CH4 m-2 hr-1"){
       
       flux_data$ch4_mgCm2d1  <- ((as.numeric(flux_data$ch4) * 1e-6) / 18)* 1e3 * 12 * 24
       
@@ -705,9 +721,40 @@ for (file in files){
   } else if(file ==  "respiration_data_Salvatore_Curasi.xlsx") {
     method_data$site_id <- "RUS_4"
   }
+  co2_x <- F
+  ch4_x <- F
+  if (sum(!is.na(flux_data$co2))>0){
+    method_data_co2 <- method_data[,c(1:21)]
+    method_data_co2$c_loss <- "ER"
+    method_data_co2$Site_Flux_ID <- paste(method_data_co2$site_id,
+                                      method_data_co2$year,
+                                      method_data_co2$c_loss,
+                                      sep = "_")
+    co2_x <- T
+  }
   
+  if ((sum(!is.na(flux_data$ch4)))>0){
+    method_data_ch4 <- method_data[,c(1:16,22:26)]
+    method_data_ch4$c_loss <- "METH"
+    method_data_ch4$Site_Flux_ID <- paste(method_data_ch4$site_id,
+                                          method_data_ch4$year,
+                                          method_data_ch4$c_loss,
+                                          sep = "_")
+    colnames(method_data_ch4) <- gsub("_ch4","",colnames(method_data_ch4))
+    
+    ch4_x <- T
+  }
+  
+  if(co2_x & ch4_x){
+    method_data_both <- rbind(method_data_co2,
+                            method_data_ch4)
+  } else if (co2_x){
+    method_data_both <- method_data_co2
+  } else if (ch4_x){
+    method_data_both <- method_data_ch4
+  }
   methods <- rbind(methods,
-                   method_data)
+                   method_data_both)
   rm(method_data)
   
   newname <- paste(unique(flux_data$site_id_automatic), unique(flux_data$flux_year_automatic), sep = "_")
