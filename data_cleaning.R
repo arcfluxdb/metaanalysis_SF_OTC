@@ -3,7 +3,6 @@
 
 library(readr)
 library(tidyverse)
-
 library(readxl)
 library(dplyr)
 library(lubridate)
@@ -18,6 +17,8 @@ library(lme4)
 #                                  col_types = cols(...1 = col_skip(), flux_date = col_date(format = "%d/%m/%Y")))
 
 all_data_230823 <- readRDS(file = "flux_db_FULL_230823.rds")
+
+unique(all_data_230823$site_id)
 
 working_data <- all_data_230823 %>% 
   filter(!is.na(co2)) %>% 
