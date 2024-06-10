@@ -858,7 +858,7 @@ flux_data <- add_column(flux_data,
                                        length(flux_data$gpp_raw)),
                         .after = "gpp_raw_unit")
 flux_data <- add_column(flux_data,
-                        gpp_raw_slope = rep(flux_data$gp_raw[2],
+                        gpp_raw_slope = rep(flux_data$gpp_raw[2],
                                         length(flux_data$gpp_raw)),
                         .after = "gpp_raw_freq")
 
@@ -1064,7 +1064,7 @@ flux_data$raw_unit <- "mg C m-2 d-1"
 colnames(flux_data) <- gsub("water_table_depth","water_table",colnames(flux_data))
 colnames(flux_data) <- gsub("thaw_depth","thaw",colnames(flux_data))
 
-plot_data <- suppressMessages(read_excel(path,
+plot_data <- suppressMessages(read_excel("D:/flux_db/Working_folder/3_third round_2023/Korea/NEE_data_import_external_CAN6_v2.xlsx",
                                          sheet = "6_PLOT_DATA", skip = 2))
 
 
@@ -1170,7 +1170,7 @@ plot_data <- plot_data %>%
   for (doubles in intersect(colnames(plot_data),colnames(flux_data))[-c(1:4)]){
     colnames(plot_data)[grep(doubles, colnames(plot_data))] <- paste(colnames(plot_data)[grep(doubles, colnames(plot_data))],"plot",sep="_")
   }
-  
+  plot_data<- plot_data[plot_data$plot_id != 2,]
   
   assert(length(setdiff(as.factor(plot_data$plot_id),as.factor(flux_data$plot_id)))==0)
   

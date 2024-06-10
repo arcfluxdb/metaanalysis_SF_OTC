@@ -3,8 +3,8 @@ rm(list = ls())
 
 library(plyr)
 
-first <- readRDS("first_round.rds")
-second <- readRDS("second_round.rds")
+first <- readRDS("database/first_round.rds")
+second <- readRDS("database/second_round.rds")
 
 
 ### site data merge
@@ -142,6 +142,6 @@ database[["sitedata"]] <- sites_combined
 database[["methoddata"]] <- methods_combined
 
 
-saveRDS(database,"database.rds")
+saveRDS(database,"database/database.rds")
 
 
