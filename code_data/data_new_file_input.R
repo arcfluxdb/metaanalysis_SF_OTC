@@ -288,6 +288,8 @@ for (file in files){
     } 
     
     else if (unitco2 == "g CO2 m-2 hr-1"){
+      
+      
       flux_data$co2_gCm2d1 <- (as.numeric(flux_data$co2) / 44) * 12 *24
     } 
     
