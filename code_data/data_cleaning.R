@@ -29,7 +29,7 @@ working_data <- all_data_230823 %>%
 working_data <- working_data %>%
     mutate(flux_date = parse_date_time(flux_date, orders = c("ymd", "mdy", "dmy")))
 
-
+colnames(working_data) <- gsub("_automatic","", colnames(working_data))
 
 # # change date column
 # 
