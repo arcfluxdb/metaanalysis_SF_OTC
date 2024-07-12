@@ -13,7 +13,7 @@ knitr::opts_chunk$set(echo = TRUE)
 
 # Jan 
 
-source("data_cleaning.R") # get up-to date dataset
+source("D:/flux_db/metaanalysis_SF_OTC/code_data/data_cleaning.R") # get up-to date dataset
 
 working_data$month <- month(working_data$flux_date)
 
