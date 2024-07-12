@@ -9,9 +9,6 @@ output: html_document
 # set up and load in data
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
-# 30.01.2024
-
-# Sarah
 
 source("D:/flux_db/metaanalysis_SF_OTC/code_data/data_cleaning.R") # get up-to date dataset
 
@@ -24,7 +21,7 @@ str(working_data)
 working_data$month <- month(working_data$flux_date)
 
 #override initial flux_id as we have no seperation in growing season
-working_data$flux_id <- as.factor(paste(working_data$site_id, working_data$year,working_data$c_loss, sep = "_"))
+working_data$flux_id <- as.factor(paste(working_data$site_id, working_data$flux_year,working_data$c_loss, sep = "_"))
 
 # #working_data$monthseason <- ifelse(working_data$month <= 3,"NGS",
 #                                    ifelse(working_data$month <= 5, "Shoulder",
@@ -34,12 +31,19 @@ working_data$flux_id <- as.factor(paste(working_data$site_id, working_data$year,
 
 ```{r calculate N, mean and sd}
 
+
+check<- working_data %>% 
+  filter(!is.na(reco)) %>% 
+  filter(treatment %in% c("CTL", "OTC","SNOWFENCE","OTCxSNOWFENCE"))
+check$site_id<-as.factor(check$site_id)
+c<-levels(check$site_id)
+
 # Define variables of interest
-variables_of_interest <- c("co2")
+variables_of_interest <- c("reco")
 
 # Summarize multiple variables
 summary_stats <- working_data %>%
-  group_by(site_id, year, treatment,flux_id, month) %>%
+  group_by(site_id, flux_year, treatment,flux_id, month) %>%
   dplyr::summarize_at(vars(variables_of_interest),
                       list(mean = ~mean(., na.rm = TRUE),
                            sd = ~sd(., na.rm = TRUE),
@@ -51,13 +55,13 @@ otc <- summary_stats %>% dplyr::filter(treatment == "OTC")
 snow_fence <- summary_stats %>% dplyr::filter(treatment == "SNOWFENCE")
 snow_fence_otc <- summary_stats %>% dplyr::filter(treatment == "OTCxSNOWFENCE")
 
-effect_df1 <- full_join(otc, snow_fence, by = c("site_id", "year","flux_id", "month"),
+effect_df1 <- full_join(otc, snow_fence, by = c("site_id", "flux_year","flux_id", "month"),
                        suffix = c("_otc", "_sf"))
 
-effect_df2 <- full_join(ctl, snow_fence_otc, by = c("site_id", "year","flux_id", "month"),
+effect_df2 <- full_join(ctl, snow_fence_otc, by = c("site_id", "flux_year","flux_id", "month"),
                        suffix = c("_ctl", "_otc_sf"))
 
-effect_df <- full_join(effect_df1, effect_df2, by = c("site_id", "year","flux_id", "month"),
+effect_df <- full_join(effect_df1, effect_df2, by = c("site_id", "flux_year","flux_id", "month"),
                        suffix = c("", ""))
 ```
 
@@ -146,7 +150,7 @@ print(result_table)
 ```{r SF}
 #total
 SF_total <- rma.mv(yi_sf, vi_sf, 
-                   mods= ~site_id,
+                   
                 random=list(~ 1 | site_id, 
                             ~ year | site_id), 
                 struct="CAR", 
