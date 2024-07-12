@@ -146,7 +146,7 @@ print(result_table)
 ```{r SF}
 #total
 SF_total <- rma.mv(yi_sf, vi_sf, 
-                   mods= ~site_id,
+                   
                 random=list(~ 1 | site_id, 
                             ~ year | site_id), 
                 struct="CAR", 
