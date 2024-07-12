@@ -16,7 +16,7 @@ library(lme4)
 #full_data_wrong_units <- read_csv("full_data_wrong_units.csv", 
 #                                  col_types = cols(...1 = col_skip(), flux_date = col_date(format = "%d/%m/%Y")))
 
-all_data_230823 <- readRDS("database/database.rds")$fluxdata
+all_data_230823 <- readRDS("D:/flux_db/metaanalysis_SF_OTC/database/database.rds")$fluxdata
 
 unique(all_data_230823$site_id)
 
@@ -25,6 +25,7 @@ working_data <- all_data_230823 %>%
   filter(treatment %in% c("CTL", "OTC","SNOWFENCE","OTCxSNOWFENCE")) %>% 
   filter(site_id_automatic != "AUS_1")  
 
+rm(all_data_230823)
 
 working_data <- working_data %>%
     mutate(flux_date = parse_date_time(flux_date, orders = c("ymd", "mdy", "dmy")))
