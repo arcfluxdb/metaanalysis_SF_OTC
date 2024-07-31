@@ -10,17 +10,25 @@ output: html_document
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 
-source("D:/flux_db/metaanalysis_SF_OTC/code_data/data_cleaning.R") # get up-to date dataset
+#source("~/1_projects and publications/4_flux data/1_winter flux data/1_R/winter flux/metaanalysis_SF_OTC/code_data/data_cleaning.R") # get up-to date dataset
+all_data <- readRDS("~/1_projects and publications/4_flux data/1_winter flux data/1_R/winter flux/metaanalysis_SF_OTC/database/database.rds")$fluxdata
 
-str(working_data)
-# 
-# #filter treatments we are interested in
-# working_data <- full_data %>% 
-#   filter(treatment %in% c("CTL","OTC","SNOWFENCE","OTCxSNOWFENCE"))
+unique(all_data$site_id_automatic)
+
+# filter treatments we are interested in
+working_data <- all_data %>% 
+  filter(!is.na(reco)) %>% 
+  filter(treatment %in% c("CTL", "OTC","SNOWFENCE","OTCxSNOWFENCE")) %>% 
+  filter(site_id_automatic != "AUS_1")  
+
+working_data <- working_data %>%
+    mutate(flux_date = parse_date_time(flux_date, orders = c("ymd", "mdy", "dmy")))
+
+colnames(working_data) <- gsub("_automatic","", colnames(working_data))
 
 working_data$month <- month(working_data$flux_date)
 
-#override initial flux_id as we have no seperation in growing season
+#override initial flux_id as we have no separation in growing season
 working_data$flux_id <- as.factor(paste(working_data$site_id, working_data$flux_year,working_data$c_loss, sep = "_"))
 
 # #working_data$monthseason <- ifelse(working_data$month <= 3,"NGS",
@@ -30,7 +38,6 @@ working_data$flux_id <- as.factor(paste(working_data$site_id, working_data$flux_
 ```
 
 ```{r calculate N, mean and sd}
-
 
 check<- working_data %>% 
   filter(!is.na(reco)) %>% 
@@ -51,30 +58,39 @@ summary_stats <- working_data %>%
 
 # Separate data for treatments OTC and SF using filter
 ctl <- summary_stats %>% dplyr::filter(treatment == "CTL")
-otc <- summary_stats %>% dplyr::filter(treatment == "OTC")
-snow_fence <- summary_stats %>% dplyr::filter(treatment == "SNOWFENCE")
-snow_fence_otc <- summary_stats %>% dplyr::filter(treatment == "OTCxSNOWFENCE")
 
-effect_df1 <- full_join(otc, snow_fence, by = c("site_id", "flux_year","flux_id", "month"),
-                       suffix = c("_otc", "_sf"))
+treat <- summary_stats %>% dplyr::filter(treatment %in% c("OTC","SNOWFENCE","OTCxSNOWFENCE"))
+effect_df <- full_join(ctl, treat, by = c("site_id", "flux_year","flux_id", "month"),
+                       suffix = c("_ctl", "_tr"))
 
-effect_df2 <- full_join(ctl, snow_fence_otc, by = c("site_id", "flux_year","flux_id", "month"),
-                       suffix = c("_ctl", "_otc_sf"))
 
-effect_df <- full_join(effect_df1, effect_df2, by = c("site_id", "flux_year","flux_id", "month"),
-                       suffix = c("", ""))
+# # split all
+# otc <- summary_stats %>% dplyr::filter(treatment == "OTC")
+# snow_fence <- summary_stats %>% dplyr::filter(treatment == "SNOWFENCE")
+# snow_fence_otc <- summary_stats %>% dplyr::filter(treatment == "OTCxSNOWFENCE")
+# 
+# effect_df1 <- full_join(otc, snow_fence, by = c("site_id", "flux_year","flux_id", "month"),
+#                        suffix = c("_otc", "_sf"))
+# 
+# effect_df2 <- full_join(ctl, snow_fence_otc, by = c("site_id", "flux_year","flux_id", "month"),
+#                        suffix = c("_ctl", "_otc_sf"))
+# 
+# effect_df <- full_join(effect_df1, effect_df2, by = c("site_id", "flux_year","flux_id", "month"),
+#                        suffix = c("", ""))
 ```
 
-```{r effectsize calc}
-otc_effect_sizes <-
+```{r effect size calculation}
+library(metafor)
+
+effect_sizes <-
   escalc( # This is the function in metafor that allows us to calculate an effect size for each row in a database
     "SMD",
     # Specify the effect size we want to calculate. In this case SMD for Standardized mean difference
-    m1i = mean_otc,
+    m1i = mean_tr,
     # mean richness at invaded sites
-    n1i = n_otc,
+    n1i = n_tr,
     # invaded site sample size
-    sd1i = sd_otc,
+    sd1i = sd_tr,
     # invaded site SD
     m2i = mean_ctl,
     # mean richness at control sites
@@ -85,205 +101,249 @@ otc_effect_sizes <-
     data = effect_df # This is where the escalc function can find all the data for our meta-analysis
   )
 
-colnames(otc_effect_sizes) <- gsub("yi", "yi_otc",colnames(otc_effect_sizes))
-colnames(otc_effect_sizes) <- gsub("vi", "vi_otc",colnames(otc_effect_sizes))
-
-sf_effect_sizes <-
-  escalc( # This is the function in metafor that allows us to calculate an effect size for each row in a database
-    "SMD",
-    # Specify the effect size we want to calculate. In this case SMD for Standardized mean difference
-    m1i = mean_sf,
-    # mean richness at invaded sites
-    n1i = n_sf,
-    # invaded site sample size
-    sd1i = sd_sf,
-    # invaded site SD
-    m2i = mean_ctl,
-    # mean richness at control sites
-    n2i = n_ctl,
-    # control site sample size
-    sd2i = sd_ctl,
-    # control site SD
-    data = effect_df # This is where the escalc function can find all the data for our meta-analysis
-  )
-
-colnames(sf_effect_sizes) <- gsub("yi", "yi_sf",colnames(sf_effect_sizes))
-colnames(sf_effect_sizes) <- gsub("vi", "vi_sf",colnames(sf_effect_sizes))
-
-otc_sf_effect_sizes <-
-  escalc( # This is the function in metafor that allows us to calculate an effect size for each row in a database
-    "SMD",
-    # Specify the effect size we want to calculate. In this case SMD for Standardized mean difference
-    m1i = mean_otc_sf,
-    # mean richness at invaded sites
-    n1i = n_otc_sf,
-    # invaded site sample size
-    sd1i = sd_otc_sf,
-    # invaded site SD
-    m2i = mean_ctl,
-    # mean richness at control sites
-    n2i = n_ctl,
-    # control site sample size
-    sd2i = sd_ctl,
-    # control site SD
-    data = effect_df # This is where the escalc function can find all the data for our meta-analysis
-  )
-
-colnames(otc_sf_effect_sizes) <- gsub("yi", "yi_otc_sf",colnames(otc_sf_effect_sizes))
-colnames(otc_sf_effect_sizes) <- gsub("vi", "vi_otc_sf",colnames(otc_sf_effect_sizes))
 ```
 
+```{r seperate for otc and sf}
+# otc_effect_sizes <-
+#   escalc( # This is the function in metafor that allows us to calculate an effect size for each row in a database
+#     "SMD",
+#     # Specify the effect size we want to calculate. In this case SMD for Standardized mean difference
+#     m1i = mean_otc,
+#     # mean richness at invaded sites
+#     n1i = n_otc,
+#     # invaded site sample size
+#     sd1i = sd_otc,
+#     # invaded site SD
+#     m2i = mean_ctl,
+#     # mean richness at control sites
+#     n2i = n_ctl,
+#     # control site sample size
+#     sd2i = sd_ctl,
+#     # control site SD
+#     data = effect_df # This is where the escalc function can find all the data for our meta-analysis
+#   )
+# 
+# colnames(otc_effect_sizes) <- gsub("yi", "yi_otc",colnames(otc_effect_sizes))
+# colnames(otc_effect_sizes) <- gsub("vi", "vi_otc",colnames(otc_effect_sizes))
+# 
+# sf_effect_sizes <-
+#   escalc( # This is the function in metafor that allows us to calculate an effect size for each row in a database
+#     "SMD",
+#     # Specify the effect size we want to calculate. In this case SMD for Standardized mean difference
+#     m1i = mean_sf,
+#     # mean richness at invaded sites
+#     n1i = n_sf,
+#     # invaded site sample size
+#     sd1i = sd_sf,
+#     # invaded site SD
+#     m2i = mean_ctl,
+#     # mean richness at control sites
+#     n2i = n_ctl,
+#     # control site sample size
+#     sd2i = sd_ctl,
+#     # control site SD
+#     data = effect_df # This is where the escalc function can find all the data for our meta-analysis
+#   )
+# 
+# colnames(sf_effect_sizes) <- gsub("yi", "yi_sf",colnames(sf_effect_sizes))
+# colnames(sf_effect_sizes) <- gsub("vi", "vi_sf",colnames(sf_effect_sizes))
+# 
+# otc_sf_effect_sizes <-
+#   escalc( # This is the function in metafor that allows us to calculate an effect size for each row in a database
+#     "SMD",
+#     # Specify the effect size we want to calculate. In this case SMD for Standardized mean difference
+#     m1i = mean_otc_sf,
+#     # mean richness at invaded sites
+#     n1i = n_otc_sf,
+#     # invaded site sample size
+#     sd1i = sd_otc_sf,
+#     # invaded site SD
+#     m2i = mean_ctl,
+#     # mean richness at control sites
+#     n2i = n_ctl,
+#     # control site sample size
+#     sd2i = sd_ctl,
+#     # control site SD
+#     data = effect_df # This is where the escalc function can find all the data for our meta-analysis
+#   )
+# 
+# colnames(otc_sf_effect_sizes) <- gsub("yi", "yi_otc_sf",colnames(otc_sf_effect_sizes))
+# colnames(otc_sf_effect_sizes) <- gsub("vi", "vi_otc_sf",colnames(otc_sf_effect_sizes))
+```
 
 ```{r overview datapoints}
-library(dplyr)
+library(tidyverse)
 
 result_table <- working_data %>%
   group_by(site_id, treatment) %>%
-  summarize(across(everything(), ~sum(!is.na(.))))
+  summarise(across(everything(), ~sum(!is.na(.))))
 
 print(result_table)
 #write.csv(result_table, "data_overview.csv")
 ```
 
 # run multivariate effects model
-#SF
-```{r SF}
-#total
-SF_total <- rma.mv(yi_sf, vi_sf, 
-                   
+
+```{r treatment comparison}
+#comparison treatments
+model_all<- rma.mv(yi, vi, 
+                   mods = ~as.factor(treatment_tr),
                 random=list(~ 1 | site_id, 
-                            ~ year | site_id), 
+                            ~ flux_year | site_id), 
                 struct="CAR", 
-                data=sf_effect_sizes)
+                data=effect_sizes)
 summary(SF_total)
 forest(SF_total)
 predict(SF_total)
 
-#orchard plot
-sf_effect_sizes$site_id <- as.factor(sf_effect_sizes$site_id)
-SF_na <- sf_effect_sizes[complete.cases(sf_effect_sizes$yi_sf), ]
+
+library(emmeans)
+#posthoc
+posthoc <- qdrg(object = model_all, data = effect_sizes)
+cld(posthoc)
+ph <- emmeans(posthoc, ~treatment_tr)
+pairs(ph)
+
+
+#plot
 library(orchaRd)
-model_SF<-orchaRd::mod_results(SF_total, mod="site_id", group="site_id", data=SF_na)
-orchard_plot(model_SF, mod = "site_id", group = "site_id", 
-             xlab = "Ecosystem respiration", transfm = "none",data=sf_effect_sizes,
-             trunk.size = 6)+
-#scale_y_continuous(limits = c(-4, 4)) +
-  theme_minimal()+
-  theme(text = element_text(family = "Arial"),
-        axis.text = element_text(size = 15),
-        axis.title = element_text(size = 15))+
+model_results <- orchaRd::mod_results(model_all, mod = "treatment_tr", group="site_id", data=effect_sizes)
+
+orchard_plot(model_results, mod = "treatment_tr", transfm = "none",
+             xlab = "Ecosystem Respiration SMD",
+             trunk.size = 0.8)+
+  scale_fill_manual(
+    values = c("darkgrey","steelblue","#FFBD17FF")) +
+  scale_color_manual(
+    values = c("darkgrey","steelblue","#FFBD17FF")) +
+  theme_void()+
+  theme(text = element_text(family = "sans"),
+        axis.text = element_text(size = 13),
+        axis.title = element_text(size = 13))+
   theme(legend.position= c(0.5, 0.05),
         legend.justification = c(0,1),
         legend.key.size = unit(1, "mm")) +
   theme(legend.direction="horizontal",
-        legend.position="bottom",
+        legend.position = "bottom",
         legend.title = element_text(size =10),
         legend.text = element_text(size = 10))
 
-# #GS
-# SF_GS <- rma.mv(yi_sf, vi_sf, 
-#                 random=list(~ 1 | site_id, 
-#                             ~ year | site_id), 
-#                 struct="CAR", 
-#                 data=subset(sf_effect_sizes, monthseason=="GS",)
-# )
-# 
-# forest(SF_GS)
-# summary(SF_GS)
-# predict(SF_GS)
-# #NGS
-# SF_NGS <- rma.mv(yi_sf, vi_sf,
-#                 random=list(~ 1 | site_id, 
-#                             ~ year | site_id), 
-#                 struct="CAR", 
-#                 data=subset(sf_effect_sizes, monthseason=="NGS",)
-# )
-# summary(SF_NGS)
-# predict(SF_NGS)
-# #Shoulder
-# SF_sh <- rma.mv(yi_sf, vi_sf, 
-#                 random=list(~ 1 | site_id, 
-#                             ~ year | site_id), 
-#                 struct="CAR", 
-#                 data=subset(sf_effect_sizes, monthseason=="Shoulder",)
-# )
-# summary(SF_sh)
-# forest(SF_sh)
-# predict(SF_sh)
+```
+
+#SF
+```{r SF}
+#SF
+SF_total <- rma.mv(yi, vi, 
+                   #mods = ~site_id,
+                random=list(~ 1 | site_id, 
+                            ~ flux_year | site_id), 
+                struct="CAR", 
+                data=subset(effect_sizes, treatment_tr=="SNOWFENCE"))
+summary(SF_total)
+forest(SF_total)
+predict(SF_total)
+
+sf_effect_sizes$site_id <- as.factor(sf_effect_sizes$site_id)
+SF_na <- sf_effect_sizes[complete.cases(sf_effect_sizes$yi_sf), ]
+#orchard plot
+model_results_SF <- orchaRd::mod_results(SF_total, mod = "1", group="site_id", data=effect_sizes)
+
+orchard_plot(model_results_SF, mod = "1", transfm = "none",
+             xlab = "Ecosystem Respiration SMD",
+             trunk.size = 0.8)+
+  scale_fill_manual(
+    values = c("#FFBD17FF")) +
+  scale_color_manual(
+    values = c("#FFBD17FF")) +
+  theme_void()+
+  theme(text = element_text(family = "sans"),
+        axis.text = element_text(size = 13),
+        axis.title = element_text(size = 13))+
+  theme(legend.position= c(0.5, 0.05),
+        legend.justification = c(0,1),
+        legend.key.size = unit(1, "mm")) +
+  theme(legend.direction="horizontal",
+        legend.position = "bottom",
+        legend.title = element_text(size =10),
+        legend.text = element_text(size = 10))
 
 ```
 
 #OTC
 ```{r  OTC}
 #total
-OTC_total <- rma.mv(yi_otc, vi_otc, 
-                    mods= ~as.factor(site_id),
+OTC_total <- rma.mv(yi, vi, 
+                    #mods= ~as.factor(site_id),
                     random=list(~ 1 | site_id,
-                                ~ year | site_id), 
+                                ~ flux_year | site_id), 
                     struct="CAR", 
-                    data=otc_effect_sizes,
+                    data=subset(effect_sizes, treatment_tr=="OTC"),
                     control = list(iter.max = 100000))  # Increase iterations
 
 summary(OTC_total)
 forest(OTC_total)
 predict(OTC_total)
 
+#OTC_na <- otc_effect_sizes[complete.cases(otc_effect_sizes$yi_otc), ]
+model_results_OTC <- orchaRd::mod_results(OTC_total, mod = "1", group="site_id", data=effect_sizes)
 
-OTC_na <- otc_effect_sizes[complete.cases(otc_effect_sizes$yi_otc), ]
-library(orchaRd)
-model_OTC<-orchaRd::mod_results(OTC_total, mod = "site_id", group = "site_id", data=OTC_na)
-orchard_plot(model_OTC, mod = "site_id", group = "site_id", 
-             xlab = "Ecosystem respiration", transfm = "none",data=sf_effect_sizes,
-             trunk.size = 6)
-#scale_y_continuous(limits = c(-4, 4)) +
-  theme_minimal()+
-  theme(text = element_text(family = "Arial"),
-        axis.text = element_text(size = 15),
-        axis.title = element_text(size = 15))+
+orchard_plot(model_results_OTC, mod = "1", transfm = "none",
+             xlab = "Ecosystem Respiration SMD",
+             trunk.size = 0.8)+
+  scale_fill_manual(
+    values = c("darkgrey")) +
+  scale_color_manual(
+    values = c("darkgrey")) +
+  theme_void()+
+  theme(text = element_text(family = "sans"),
+        axis.text = element_text(size = 13),
+        axis.title = element_text(size = 13))+
   theme(legend.position= c(0.5, 0.05),
         legend.justification = c(0,1),
         legend.key.size = unit(1, "mm")) +
   theme(legend.direction="horizontal",
-        legend.position="bottom",
+        legend.position = "bottom",
         legend.title = element_text(size =10),
         legend.text = element_text(size = 10))
-
 ```
 http://127.0.0.1:35789/graphics/plot_zoom_png?width=1200&height=900
 #SFxOTC
 ```{r SFxOTC}
 
 #total
-OTC_SF_total <- rma.mv(yi_otc_sf, vi_otc_sf, 
-                       mods= ~site_id,
+OTC_SF_total <- rma.mv(yi, vi, 
+                       #mods= ~site_id,
                 random=list(~ 1 | site_id, 
-                            ~ year | site_id), 
+                            ~ flux_year | site_id), 
                 struct="CAR", 
-                data=otc_sf_effect_sizes)
+                data=subset(effect_sizes, treatment_tr=="OTCxSNOWFENCE"))
 summary(OTC_SF_total)
 forest(OTC_SF_total,
        overall = TRUE)
 predict(OTC_SF_total)
 
-OTC_SF_na <- otc_sf_effect_sizes[complete.cases(otc_sf_effect_sizes$yi_otc_sf), ]
-library(orchaRd)
-model_OTC_SF<-orchaRd::mod_results(OTC_SF_total, mod="site_id", group="site_id", data=OTC_SF_na)
-orchard_plot(model_OTC_SF, mod = "site_id", group = "site_id", 
-             xlab = "Ecosystem respiration", transfm = "none",data=sf_effect_sizes,
-             trunk.size = 6)+
-#scale_y_continuous(limits = c(-4, 4)) +
-  theme_minimal()+
-  theme(text = element_text(family = "Arial"),
-        axis.text = element_text(size = 15),
-        axis.title = element_text(size = 15))+
+#OTC_SF_na <- otc_sf_effect_sizes[complete.cases(otc_sf_effect_sizes$yi_otc_sf), ]
+
+model_results_OTC_SF <- orchaRd::mod_results(OTC_SF_total, mod = "1", group="site_id", data=effect_sizes)
+
+orchard_plot(model_results_OTC_SF, mod = "1", transfm = "none",
+             xlab = "Ecosystem Respiration SMD",
+             trunk.size = 0.8)+
+  scale_fill_manual(
+    values = c("darkgrey")) +
+  scale_color_manual(
+    values = c("darkgrey")) +
+  theme_void()+
+  theme(text = element_text(family = "sans"),
+        axis.text = element_text(size = 13),
+        axis.title = element_text(size = 13))+
   theme(legend.position= c(0.5, 0.05),
         legend.justification = c(0,1),
         legend.key.size = unit(1, "mm")) +
   theme(legend.direction="horizontal",
-        legend.position="bottom",
+        legend.position = "bottom",
         legend.title = element_text(size =10),
         legend.text = element_text(size = 10))
-
 ```
 ## MAP
 ```{r map}
@@ -327,8 +387,9 @@ sessionInfo()
 # 
 # dat$Nr_Obs
 
-working_data$n_coord_site<-as.numeric(working_data$n_coord_site)
-unique_data <- distinct(working_data, site_id, e_coord_site, n_coord_site, treatment)  # Replace 'lon' and 'lat' with your coordinate column names
+working_data$n_coord_plot_dd<-as.numeric(working_data$n_coord_plot_dd)
+working_data$e_coord_plot_dd<-as.numeric(working_data$e_coord_plot_dd)
+unique_data <- distinct(working_data, site_id, e_coord_plot_dd, n_coord_plot_dd, treatment)  # Replace 'lon' and 'lat' with your coordinate column names
 
 # get map data
 thismap = map_data("world")
@@ -337,7 +398,7 @@ thismap = map_data("world")
 x_lines <- seq(-120,180, by = 60)
 
 # Now modify the ggplot code
-map <- ggplot() +
+Karte<-ggplot() +
   geom_polygon(data = thismap, aes(x = long, y = lat, group = group), fill = "lightgrey", colour = "lightgrey") +
   
   # Convert to polar coordinates
@@ -345,7 +406,7 @@ map <- ggplot() +
   scale_y_continuous(breaks = seq(30, 90, by = 10), labels = NULL) +
   
   # Adds points for all treatments except "OTCxSNOWFENCE"
-  geom_point(data=subset(unique_data, treatment != "CTL" & treatment != "OTCxSNOWFENCE"), aes(x=e_coord_site, y=n_coord_site,   
+  geom_point(data=subset(unique_data, treatment != "CTL" & treatment != "OTCxSNOWFENCE"), aes(x=e_coord_plot_dd, y=n_coord_plot_dd,   
               group=treatment, 
               fill=treatment,
               pch=treatment  # Map the shape to the new shape column
@@ -355,7 +416,7 @@ map <- ggplot() +
        size=3) +  
   
   # Adds points for "OTCxSNOWFENCE" with no transparency
-  geom_point(data=subset(unique_data, treatment == "OTCxSNOWFENCE"), aes(x=e_coord_site, y=n_coord_site,   
+  geom_point(data=subset(unique_data, treatment == "OTCxSNOWFENCE"), aes(x=e_coord_plot_dd, y=n_coord_plot_dd,   
               group=treatment, 
               fill=treatment,
             pch=treatment  # Map the shape to the new shape column
