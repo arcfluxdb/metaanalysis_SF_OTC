@@ -457,12 +457,12 @@ Karte<-ggplot() +
 
 ```
 
-
+# Where is the site_level data in the working_data file?
 ```{r PF categories for Mats}
 
 #Mats needs: permafrost layers, site id_site_name; coordinates; vegetation on plot level 
-PF_data_plot <- distinct(working_data, site_id, year, plot_id, e_coord_site, n_coord_site, treatment, veg_type_site, veg_class_site, pf_site)  
-PF_data_site <- distinct(working_data, site_id, year, e_coord_site, n_coord_site, treatment, veg_type_site, veg_class_site, pf_site) 
+PF_data_plot <- distinct(working_data, site_id, flux_year, plot_id, e_coord_plot_dd, n_coord_plot_dd, treatment, veg_type_site, veg_class_site, pf_site)  
+PF_data_site <- distinct(working_data, site_id, year, e_coord_plot_dd, n_coord_plot_dd, treatment, veg_type_site, veg_class_site, pf_site) 
 
 contacts_flux_data <- read_csv("contacts flux data_local copy.csv")
 
@@ -473,7 +473,7 @@ PF_site <- dplyr::left_join(PF_data_site, contacts_flux_data, by = "site_id")
 write.csv(PF_site, "PF_site.csv")
 
 ```
-```{r}
+```{r quick plots}
 library(RColorBrewer)
 ggplot(subset(working_data, treatment!="CTL"), aes(x = as.factor(treatment), y = co2, fill=treatment)) +
   geom_col() +  # Adjust fill color as desired
@@ -488,7 +488,9 @@ ggplot(effect_df, aes(x = site_id, y = mean_sf, fill=site_id)) +
   theme_minimal()
 
 ```
-```{r}
+
+
+```{r data from Hermesdorf et al paper}
 
 Hermesdorf<- read_csv("~/1_projects and publications/4_flux data/1_winter flux data/4_new data/extract from literature/GCB_Hermesdorf_et_al.csv")
 # Function to convert mg CO2/m²/h to g C-CO2/m²/d
