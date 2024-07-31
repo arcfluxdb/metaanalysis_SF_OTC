@@ -16,9 +16,7 @@ library(lme4)
 #full_data_wrong_units <- read_csv("full_data_wrong_units.csv", 
 #                                  col_types = cols(...1 = col_skip(), flux_date = col_date(format = "%d/%m/%Y")))
 
-
 all_data <- readRDS("D:/flux_db/metaanalysis_SF_OTC/database/database.rds")$fluxdata
-
 
 unique(all_data$site_id_automatic)
 
