@@ -1,6 +1,6 @@
 # 2024.01.23
 # Jan, Sarah
-
+rm(list = ls())
 library(readr)
 library(tidyverse)
 library(readxl)
@@ -23,8 +23,8 @@ all_data <- all_data %>%
   mutate(treatment = ifelse(treatment == "sf", "SNOWFENCE",
                             ifelse(treatment == "ctl", "CTL",treatment)))
 
+site_data <- readRDS("D:/flux_db/metaanalysis_SF_OTC/database/database.rds")$sitedata
 
-unique(all_data$site_id_automatic)
 
 
 working_data <- all_data %>% 
@@ -38,6 +38,14 @@ working_data <- working_data %>%
     mutate(flux_date = parse_date_time(flux_date, orders = c("ymd", "mdy", "dmy")))
 
 colnames(working_data) <- gsub("_automatic","", colnames(working_data))
+
+site_data$year <- as.numeric(site_data$year)
+site_data <- site_data[duplicated(site_data[,c(1,2)]),]
+
+working_data <- working_data %>%
+  dplyr::left_join(site_data, by = c("site_id" = "site_id", "flux_year" = "year"))
+
+
 
 # # change date column
 # 
