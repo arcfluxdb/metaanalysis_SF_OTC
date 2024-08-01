@@ -115,3 +115,64 @@ database[["methoddata"]] <- meths
 
 saveRDS(database,"database/database.rds")
 
+
+##########
+
+s1107 <- read_excel("D:/flux_db/Working_folder/3_third round_2023/SVA_11_2007.xlsx", 
+                          col_types = c("date", "text", "text", 
+                                        "text", "text", "text", "numeric", 
+                                        "numeric", "skip", "skip", "numeric", 
+                                        "numeric"))
+s1108 <- read_excel("D:/flux_db/Working_folder/3_third round_2023/SVA_11_2008.xlsx", 
+                    col_types = c("date", "text", "text", 
+                                  "text", "text", "text", "numeric", 
+                                  "numeric", "skip", "skip", "numeric", 
+                                  "numeric"))
+s1207 <- read_excel("D:/flux_db/Working_folder/3_third round_2023/SVA_12_2007.xlsx", 
+                    col_types = c("date", "text", "text", 
+                                  "text", "text", "text", "numeric", 
+                                  "numeric", "skip", "skip", "numeric", 
+                                  "numeric"))
+s1208 <- read_excel("D:/flux_db/Working_folder/3_third round_2023/SVA_12_2008.xlsx", 
+                    col_types = c("date", "text", "text", 
+                                  "text", "text", "text", "numeric", 
+                                  "numeric", "skip", "skip", "numeric", 
+                                  "numeric"))
+sva1112 <- rbind(s1107,s1108,s1207,s1208)
+sva1112$veg <- ifelse(sva1112$veg == "heath", "SVA_11", "SVA_12")
+colnames(sva1112) <- c("flux_date",
+                       "site_id_automatic",
+                       "treatment",
+                       "remove",
+                       "remove1",
+                       "plot_id",
+                       "reco_raw",
+                       "soil_moist",
+                       "air_temp",
+                       "soil_temp")
+sva1112$flux_year_automatic <- year(sva1112$flux_date)
+sva1112$flux_julian_day_automatic <- yday(sva1112$flux_date)
+sva1112$c_loss <- "CO2"
+sva1112$season_automatic <- ifelse(month(sva1112$flux_date) > 8,"NGS","GS")
+sva1112$flux_id_automatic <- paste(sva1112$site_id_automatic,
+                                   "_",
+                                   sva1112$c_loss,
+                                   sva1112$season_automatic,
+                                   "_",
+                                   sva1112$flux_year_automatic,
+                                   sep="")
+sva1112$reco_raw_unit <- "μmol m-2 s-1"
+sva1112$soil_temp_depth <- "5"
+sva1112$soil_moist_depth <- "5"
+sva1112$reco <- as.numeric(sva1112$reco_raw) * 1e-6 * 12 * (60*60*24)
+sva1112$reco_unit <- "g C m-2 d-1"
+sva1112$remove1 <- NULL
+sva1112$remove <- NULL
+
+
+
+
+fluxes <- rbind.fill(fluxes,
+                     sva1112)
+database[["fluxdata"]] <- fluxes
+saveRDS(database,"database/database.rds")
