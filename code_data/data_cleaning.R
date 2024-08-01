@@ -59,6 +59,16 @@ working_data$outlier <- with(working_data, reco < lower | reco > upper)
 
 working_data <- working_data[!working_data$outlier,]
 
+working_data <- working_data %>% 
+  mutate(air_temp = ifelse(is.na(air_temp),NA, as.numeric(air_temp)))
+
+as.numeric(working_data$air_temp)
+
+working_data$air_temp[grepl("NA", working_data$air_temp)] <- NA
+
+working_data$air_temp[!is.na(working_data$air_temp)] <- as.numeric(working_data$air_temp[!is.na(working_data$air_temp)])
+
+
 # # change date column
 # 
 # all_dates <- all_data_230823 %>% 
