@@ -40,7 +40,7 @@ working_data <- working_data %>%
 colnames(working_data) <- gsub("_automatic","", colnames(working_data))
 
 site_data$year <- as.numeric(site_data$year)
-site_data <- site_data[duplicated(site_data[,c(1,2)]),]
+site_data <- site_data[!duplicated(site_data[,c(1,2)]),]
 
 working_data <- working_data %>%
   dplyr::left_join(site_data, by = c("site_id" = "site_id", "flux_year" = "year"))
