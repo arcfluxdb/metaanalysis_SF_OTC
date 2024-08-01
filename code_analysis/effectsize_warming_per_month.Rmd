@@ -15,7 +15,7 @@ knitr::opts_chunk$set(echo = TRUE)
 
 source("D:/flux_db/metaanalysis_SF_OTC/code_data/data_cleaning.R") # get up-to date dataset
 
-working_data$month <- month(working_data$flux_date)
+
 
 
 
@@ -94,7 +94,7 @@ ggplot(plotdata) +
 Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
 ```{r preps}
 monthly <- working_data %>%
-  group_by(site_id,year,month) %>% 
+  group_by(site_id,flux_year,month) %>% 
   dplyr::summarise(n_ctl = sum(treatment == "CTL",na.rm=T),
                    n_otc = sum(treatment == "OTC",na.rm=T),
                    n_sf = sum(treatment == "SNOWFENCE",na.rm=T),
@@ -197,7 +197,7 @@ colnames(otc_sf_effect_sizes) <- gsub("vi", "vi_otc_sf",colnames(otc_sf_effect_s
 #otc
 otc_total <- rma.mv(yi_otc, vi_otc, 
                    random=list(~ 1 | site_id, 
-                            ~ year | site_id), 
+                            ~ flux_year | site_id), 
                    struct="CAR",
                    mods = ~month,
                    data=otc_effect_sizes)
@@ -211,7 +211,7 @@ ggplot(otc_effect_sizes) +
 #SF
 sf_total <- rma.mv(yi_sf, vi_sf, 
                    random=list(~ 1 | month, 
-                            ~ year | month), 
+                            ~ flux_year | month), 
                    struct="CAR",
                    data=sf_effect_sizes)
 summary(sf_total)
@@ -222,7 +222,7 @@ ggplot(sf_effect_sizes) +
 #otc_sf
 otc_sf_total <- rma.mv(yi_otc_sf, vi_otc_sf, 
                    random=list(~ 1 | month, 
-                            ~ year | month), 
+                            ~ flux_year | month), 
                    struct="CAR",
                    data=otc_sf_effect_sizes)
 summary(otc_sf_total)
