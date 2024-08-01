@@ -12,7 +12,7 @@ knitr::opts_chunk$set(echo = TRUE)
 # 23.01.2024
 
 # Jan 
-
+rm(list = ls())
 source("D:/flux_db/metaanalysis_SF_OTC/code_data/data_cleaning.R") # get up-to date dataset
 
 
@@ -22,6 +22,7 @@ source("D:/flux_db/metaanalysis_SF_OTC/code_data/data_cleaning.R") # get up-to d
 
 
 working_data$month <- month(working_data$flux_date)
+working_data$week <- lubridate::isoweek(working_data$flux_date)
 working_data$doy <- yday(working_data$flux_date)
 
 working_data$monthseason <- ifelse(working_data$month <= 3,"NGS",
@@ -32,64 +33,6 @@ working_data$monthseason <- ifelse(working_data$month <= 3,"NGS",
 
 
 
-```{r treatments}
-ggplot(working_data) +
-  geom_bar(aes(x=treatment,fill=site_id),stat = "count") + 
-  scale_fill_viridis_d(option = "turbo")+
-  theme_classic()
-```
-```{r treatments}
-ggplot(working_data[working_data$site_id != "ALA_1",]) +
-  geom_bar(aes(x=treatment,fill=site_id),stat = "count") + 
-  scale_fill_viridis_d(option = "turbo")+
-  theme_classic()
-```
-```{r treatments}
-ggplot(working_data[working_data$treatment %in% c("SNOWFENCE","OTCxSNOWFENCE"),]) +
-  geom_bar(aes(x=treatment,fill=site_id),stat = "count") + 
-  scale_fill_viridis_d(option = "turbo")+
-  theme_classic()
-```
-```{r treatments}
-ggplot(working_data[working_data$site_id != "ALA_1" & working_data$treatment %in% c("SNOWFENCE","OTCxSNOWFENCE"),]) +
-  geom_bar(aes(x=treatment,fill=site_id),stat = "count") + 
-  scale_fill_viridis_d(option = "turbo")+
-  facet_wrap(~monthseason,scales="free")+
-  theme_classic()
-```
-```{r treatments}
-ggplot(working_data[working_data$site_id != "ALA_1" & working_data$treatment %in% c("SNOWFENCE","OTCxSNOWFENCE"),]) +
-  geom_bar(aes(x=month,fill=site_id),stat = "count") + 
-  scale_fill_viridis_d(option = "turbo")+
-  facet_wrap(~treatment,scales="free")+
-  theme_classic()
-```
-```{r treatments}
-ggplot(working_data[working_data$site_id != "ALA_1" & working_data$treatment %in% c("OTC","SNOWFENCE","OTCxSNOWFENCE"),]) +
-  geom_bar(aes(x=month,fill=site_id),stat = "count") + 
-  scale_fill_viridis_d(option = "turbo")+
-  facet_wrap(~treatment,scales="free")+
-  theme_classic()
-```
-
-
-```{r months, echo=FALSE}
-# ggplot(working_data) +
-# 
-#   geom_bar(aes(x=month, fill = site_id),stat = "count") + 
-#   facet_wrap(~monthseason,scales="free")+
-#   theme_classic()
-
-plotdata <- working_data %>% 
-  group_by(site_id, year,month,treatment) %>% 
-  dplyr::summarise(n=n())
-ggplot(plotdata) +
-  geom_bar(aes(x=month, fill = site_id),stat = "count") + 
-  facet_wrap(~treatment,scales="free")+ 
-
-  theme_classic()
-```
-
 
 Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
 ```{r preps}
@@ -99,14 +42,14 @@ monthly <- working_data %>%
                    n_otc = sum(treatment == "OTC",na.rm=T),
                    n_sf = sum(treatment == "SNOWFENCE",na.rm=T),
                    n_otc_sf = sum(treatment == "OTCxSNOWFENCE",na.rm=T),
-                   m_ctl = mean(co2[treatment == "CTL"],na.rm=T),
-                   m_otc = mean(co2[treatment == "OTC"],na.rm=T),
-                   m_sf = mean(co2[treatment == "SNOWFENCE"],na.rm=T),
-                   m_otc_sf = mean(co2[treatment == "OTCxSNOWFENCE"],na.rm=T),
-                   s_ctl = sd(co2[treatment == "CTL"],na.rm=T),
-                   s_otc = sd(co2[treatment == "OTC"],na.rm=T),
-                   s_sf = sd(co2[treatment == "SNOWFENCE"],na.rm=T),
-                   s_otc_sf = sd(co2[treatment == "OTCxSNOWFENCE"],na.rm=T))
+                   m_ctl = mean(reco[treatment == "CTL"],na.rm=T),
+                   m_otc = mean(reco[treatment == "OTC"],na.rm=T),
+                   m_sf = mean(reco[treatment == "SNOWFENCE"],na.rm=T),
+                   m_otc_sf = mean(reco[treatment == "OTCxSNOWFENCE"],na.rm=T),
+                   s_ctl = sd(reco[treatment == "CTL"],na.rm=T),
+                   s_otc = sd(reco[treatment == "OTC"],na.rm=T),
+                   s_sf = sd(reco[treatment == "SNOWFENCE"],na.rm=T),
+                   s_otc_sf = sd(reco[treatment == "OTCxSNOWFENCE"],na.rm=T))
 
 monthly_otc <- monthly %>% filter(!is.na(m_otc))
 monthly_otc <- monthly_otc[,-c(grep("sf",colnames(monthly_otc)))]
@@ -204,11 +147,12 @@ otc_total <- rma.mv(yi_otc, vi_otc,
 summary(otc_total)
 forest(otc_total)
 ggplot(otc_effect_sizes) +
-  geom_boxplot(aes(x=as.factor(month), y= yi_otc))+
-  facet_wrap(~site_id)
+  geom_boxplot(aes(x=as.factor(month), y= yi_otc))
+  
   
 
 #SF
+sf_effect_sizes <- na.omit(sf_effect_sizes)
 sf_total <- rma.mv(yi_sf, vi_sf, 
                    random=list(~ 1 | month, 
                             ~ flux_year | month), 
@@ -217,7 +161,7 @@ sf_total <- rma.mv(yi_sf, vi_sf,
 summary(sf_total)
 forest(sf_total)
 ggplot(sf_effect_sizes) +
-  geom_boxplot(aes(x=as.factor(month), y= yi_sf,fill=site_id))
+  geom_boxplot(aes(x=as.factor(month), y= yi_sf))
 
 #otc_sf
 otc_sf_total <- rma.mv(yi_otc_sf, vi_otc_sf, 
@@ -228,59 +172,19 @@ otc_sf_total <- rma.mv(yi_otc_sf, vi_otc_sf,
 summary(otc_sf_total)
 forest(otc_sf_total)
 ggplot(otc_sf_effect_sizes) +
-  geom_boxplot(aes(x=as.factor(month), y= yi_otc_sf,,fill=site_id))
+  geom_boxplot(aes(x=as.factor(month), y= yi_otc_sf))
 
 ```
-
-
-
-```{r }
-ggplot(otc_effect_sizes)+
-  geom_boxplot(aes(x=as.factor(month),y=yi_otc),varwidth = TRUE)+
-  geom_jitter(aes(x=as.factor(month),y=yi_otc,color=site_id),width = 0.1,alpha = 0.5)+
-  facet_wrap(~site_id)+
-  theme_minimal()
-
-# otc_model <- lmer(yi_otc ~ month + (1|site_id) + (1|year), 
-#               weights = 1 / vi_otc^2,
-#               data = otc_effect_sizes)
-# summary(otc_model)
-```
-```{r}
-ggplot(otc_effect_sizes[otc_effect_sizes$site_id == "GRE_6",])+
-    #geom_boxplot(aes(x=as.factor(month),y=yi_otc),varwidth = TRUE)+
-    #geom_jitter(aes(x=as.factor(month),y=yi_otc,color=as.factor(year)),size =4)+
-    geom_smooth(aes(x=month,y=yi_otc,color=as.factor(year)),method="lm",se=F)+
-    facet_wrap(~site_id)+
-    theme_minimal()
-```
-
-
-
-```{r }
-ggplot(sf_effect_sizes)+
-  geom_boxplot(aes(x=as.factor(month),y=yi_sf),varwidth = TRUE)+
-  geom_jitter(aes(x=as.factor(month),y=yi_sf,color=site_id),width = 0.1,alpha = 0.5)+
-  theme_minimal()
-```
-
-```{r}
-ggplot(otc_sf_effect_sizes)+
-  geom_boxplot(aes(x=as.factor(month),y=yi_otc_sf),varwidth = T)+
-  geom_jitter(aes(x=as.factor(month),y=yi_otc_sf,color=site_id),width = 0.1,alpha = 0.5)+
-  theme_minimal()
-```
-
 
 ```{r}
 full_effect_size <- merge(otc_effect_sizes[,c(1,2,3,10,11)],
                           sf_effect_sizes[,c(1,2,3,10,11)],
-                          by = c("site_id", "year", "month"),
+                          by = c("site_id", "flux_year", "month"),
                           all = T)
 
 full_effect_size <- merge(full_effect_size ,
                           otc_sf_effect_sizes[,c(1,2,3,10,11)],
-                          by = c("site_id", "year", "month"),
+                          by = c("site_id", "flux_year", "month"),
                           all = T)
 
 stacked_effect <- full_effect_size %>% 
@@ -299,9 +203,9 @@ ggplot(full_effect_size)+
 ```
 
 ```{r}
-
-ggplot(stacked_effect, aes(x = as.factor(month), y = effectsize, fill = treatment)) +
-  geom_boxplot(varwidth = T, alpha = 0.5) +
+ggplot(stacked_effect[stacked_effect$month != 4,], aes(x = month, y = effectsize, color = treatment)) +
+  geom_point() +
+  geom_smooth(method = "loess") +
   geom_smooth(aes(color = treatment), method = "lm", se = FALSE) +
   geom_hline(yintercept = 0.5, alpha = 0.75)+
   geom_hline(yintercept = 0.25, alpha = 0.75)+
@@ -310,57 +214,34 @@ ggplot(stacked_effect, aes(x = as.factor(month), y = effectsize, fill = treatmen
   theme_classic()
 ```
 
-```{r}
-colnames(working_data)
-duration <- working_data[,grep("site_id|(?<!_)year|er_duration",colnames(working_data),value = TRUE, perl = TRUE)]
-
-stacked_effect_length <- distinct(merge(stacked_effect,
-                        duration,
-                        by = c("site_id","year"),
-                        all = T))
-```
-
-```{r}
-stacked_effect_length$duration <- ifelse(stacked_effect_length$er_duration_method <= 5, "0-5",
-                                         ifelse(stacked_effect_length$er_duration_method <= 10, "6-10",
-                                                ifelse(stacked_effect_length$er_duration_method <= 15, "11-15",
-                                                       "16-20")))
-                                         
-
-ggplot(stacked_effect_length)+
-  geom_point(aes(x=er_duration_method, y = effectsize, color = treatment), alpha = 0.5)+
-  geom_smooth(aes(x=er_duration_method, y = effectsize, color = treatment),method="lm")+
-  theme_classic()
-```
-
 ```{r preps}
-dayly <- working_data %>%
-  group_by(site_id,year,flux_julian_day) %>% 
+weekly <- working_data %>%
+  group_by(site_id,flux_year,week) %>% 
   dplyr::summarise(n_ctl = sum(treatment == "CTL",na.rm=T),
                    n_otc = sum(treatment == "OTC",na.rm=T),
                    n_sf = sum(treatment == "SNOWFENCE",na.rm=T),
                    n_otc_sf = sum(treatment == "OTCxSNOWFENCE",na.rm=T),
-                   m_ctl = mean(co2[treatment == "CTL"],na.rm=T),
-                   m_otc = mean(co2[treatment == "OTC"],na.rm=T),
-                   m_sf = mean(co2[treatment == "SNOWFENCE"],na.rm=T),
-                   m_otc_sf = mean(co2[treatment == "OTCxSNOWFENCE"],na.rm=T),
-                   s_ctl = sd(co2[treatment == "CTL"],na.rm=T),
-                   s_otc = sd(co2[treatment == "OTC"],na.rm=T),
-                   s_sf = sd(co2[treatment == "SNOWFENCE"],na.rm=T),
-                   s_otc_sf = sd(co2[treatment == "OTCxSNOWFENCE"],na.rm=T))
+                   m_ctl = mean(reco[treatment == "CTL"],na.rm=T),
+                   m_otc = mean(reco[treatment == "OTC"],na.rm=T),
+                   m_sf = mean(reco[treatment == "SNOWFENCE"],na.rm=T),
+                   m_otc_sf = mean(reco[treatment == "OTCxSNOWFENCE"],na.rm=T),
+                   s_ctl = sd(reco[treatment == "CTL"],na.rm=T),
+                   s_otc = sd(reco[treatment == "OTC"],na.rm=T),
+                   s_sf = sd(reco[treatment == "SNOWFENCE"],na.rm=T),
+                   s_otc_sf = sd(reco[treatment == "OTCxSNOWFENCE"],na.rm=T))
 
-dayly_otc <- dayly %>% filter(!is.na(m_otc))
-dayly_otc <- dayly_otc[,-c(grep("sf",colnames(dayly_otc)))]
+weekly_otc <- na.omit(weekly %>% filter(!is.na(m_otc)))
+weekly_otc <- weekly_otc[,-c(grep("sf",colnames(weekly_otc)))]
 
-dayly_sf <- dayly %>% filter(!is.na(m_sf))
-dayly_sf <- dayly_sf[,-c(grep("otc",colnames(dayly_sf)))]
+weekly_sf <- na.omit(weekly %>% filter(!is.na(m_sf)))
+weekly_sf <- weekly_sf[,-c(grep("otc",colnames(weekly_sf)))]
 
-dayly_otc_sf <- dayly %>% filter(!is.na(m_otc_sf))
-dayly_otc_sf <- dayly_otc_sf[,c(1,2,3,c(grep("ctl|otc_sf",colnames(dayly_otc_sf))))]
+weekly_otc_sf <- na.omit(weekly %>% filter(!is.na(m_otc_sf)))
+weekly_otc_sf <- weekly_otc_sf[,c(1,2,3,c(grep("ctl|otc_sf",colnames(weekly_otc_sf))))]
 
 
 ```
-
+lets go 
 ```{r effectsize calc}
 otc_effect_sizes <-
   escalc( # This is the function in metafor that allows us to calculate an effect size for each row in a database
@@ -378,7 +259,7 @@ otc_effect_sizes <-
     # control site sample size
     sd2i = s_ctl,
     # control site SD
-    data = dayly_otc # This is where the escalc function can find all the data for our meta-analysis
+    data = weekly_otc # This is where the escalc function can find all the data for our meta-analysis
   )
 
 colnames(otc_effect_sizes) <- gsub("yi", "yi_otc",colnames(otc_effect_sizes))
@@ -400,7 +281,7 @@ sf_effect_sizes <-
     # control site sample size
     sd2i = s_ctl,
     # control site SD
-    data = monthly_sf # This is where the escalc function can find all the data for our meta-analysis
+    data = weekly_sf # This is where the escalc function can find all the data for our meta-analysis
   )
 
 colnames(sf_effect_sizes) <- gsub("yi", "yi_sf",colnames(sf_effect_sizes))
@@ -422,19 +303,71 @@ otc_sf_effect_sizes <-
     # control site sample size
     sd2i = s_ctl,
     # control site SD
-    data = monthly_otc_sf # This is where the escalc function can find all the data for our meta-analysis
+    data = weekly_otc_sf # This is where the escalc function can find all the data for our meta-analysis
   )
+
+colnames(otc_sf_effect_sizes) <- gsub("yi", "yi_otc_sf",colnames(otc_sf_effect_sizes))
+colnames(otc_sf_effect_sizes) <- gsub("vi", "vi_otc_sf",colnames(otc_sf_effect_sizes))
+
+
+
+```
+
+# models
+
+```{r yo}
+#otc
+otc_total <- rma.mv(yi_otc, vi_otc, 
+                   random=list(~ 1 | site_id, 
+                            ~ flux_year | site_id), 
+                   struct="CAR",
+                   mods = ~week,
+                   data=otc_effect_sizes)
+summary(otc_total)
+forest(otc_total)
+ggplot(otc_effect_sizes) +
+  geom_point(aes(x=as.factor(week), y= yi_otc))
+
+``` 
+  
+```{r yo}
+#SF
+sf_effect_sizes <- na.omit(sf_effect_sizes)
+sf_total <- rma.mv(yi_sf, vi_sf, 
+                   random=list(~ 1 | week, 
+                            ~ flux_year | week), 
+                   struct="CAR",
+                   data=sf_effect_sizes)
+summary(sf_total)
+forest(sf_total)
+ggplot(sf_effect_sizes) +
+  geom_boxplot(aes(x=as.factor(week), y= yi_sf))
+
+```
+
+```{r yo}
+#otc_sf
+otc_sf_total <- rma.mv(yi_otc_sf, vi_otc_sf, 
+                   random=list(~ 1 | week, 
+                            ~ flux_year | week), 
+                   struct="CAR",
+                   data=otc_sf_effect_sizes)
+summary(otc_sf_total)
+forest(otc_sf_total)
+ggplot(otc_sf_effect_sizes) +
+  geom_boxplot(aes(x=as.factor(week), y= yi_otc_sf))
+
 ```
 
 ```{r}
 full_effect_size <- merge(otc_effect_sizes[,c(1,2,3,10,11)],
                           sf_effect_sizes[,c(1,2,3,10,11)],
-                          by = c("site_id", "year", "flux_julian_day"),
+                          by = c("site_id", "flux_year", "week"),
                           all = T)
 
 full_effect_size <- merge(full_effect_size ,
                           otc_sf_effect_sizes[,c(1,2,3,10,11)],
-                          by = c("site_id", "year", "flux_julian_day"),
+                          by = c("site_id", "flux_year", "week"),
                           all = T)
 
 stacked_effect <- full_effect_size %>% 
@@ -442,16 +375,25 @@ stacked_effect <- full_effect_size %>%
 
 ```
 
+hello i changed something
+
 
 ```{r}
 ggplot(full_effect_size)+
-  geom_boxplot(aes(x=as.factor(month),y=yi_otc_sf),fill="red",alpha=0.8, varwidth = T)+
-  geom_boxplot(aes(x=as.factor(month),y=yi_otc),fill="lightgreen",alpha=0.8, varwidth = T)+
-  geom_boxplot(aes(x=as.factor(month),y=yi_sf),fill="lightblue",alpha=0.8, varwidth = T)
+  geom_boxplot(aes(x=as.factor(week),y=yi_otc_sf),fill="red",alpha=0.8, varwidth = T)+
+  geom_boxplot(aes(x=as.factor(week),y=yi_otc),fill="lightgreen",alpha=0.8, varwidth = T)+
+  geom_boxplot(aes(x=as.factor(week),y=yi_sf),fill="lightblue",alpha=0.8, varwidth = T)
 ```
 
-
 ```{r}
-working_data$er_machine_type_method
+ggplot(stacked_effect, aes(x = week, y = effectsize, color = treatment)) +
+  geom_point() +
+  geom_smooth(method = "loess")+
+  geom_smooth(aes(color = treatment), method = "lm", se = FALSE) +
+  geom_hline(yintercept = 0.5, alpha = 0.75)+
+  geom_hline(yintercept = 0.25, alpha = 0.75)+
+  geom_hline(yintercept = 0.75, alpha = 0.75)+
+  #geom_jitter(aes(color = site_id), position = position_jitterdodge()) +
+  theme_classic()
 ```
 
