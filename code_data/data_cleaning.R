@@ -34,8 +34,8 @@ working_data <- all_data %>%
 
 
 
-working_data <- working_data %>%
-    mutate(flux_date = parse_date_time(flux_date, orders = c("ymd", "mdy", "dmy")))
+#working_data <- working_data %>%
+#    mutate(flux_date = parse_date_time(flux_date, orders = c("ymd", "mdy", "dmy")))
 
 colnames(working_data) <- gsub("_automatic","", colnames(working_data))
 
@@ -45,7 +45,19 @@ site_data <- site_data[!duplicated(site_data[,c(1,2)]),]
 working_data <- working_data %>%
   dplyr::left_join(site_data, by = c("site_id" = "site_id", "flux_year" = "year"))
 
+outlierremoval <- working_data %>% 
+  group_by(site_id,flux_year) %>% 
+  dplyr::summarise(recosd = sd(reco, na.rm=T),
+                   recomean = mean(reco, na.rm=T))
+outlierremoval$upper <- outlierremoval$recomean + 3 * (outlierremoval$recosd)  
+outlierremoval$lower <- outlierremoval$recomean - 3 * (outlierremoval$recosd)  
 
+working_data <- working_data %>% 
+  dplyr::left_join(outlierremoval[,c(1,2,5,6)])
+
+working_data$outlier <- with(working_data, reco < lower | reco > upper)
+
+working_data <- working_data[!working_data$outlier,]
 
 # # change date column
 # 
