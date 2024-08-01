@@ -19,8 +19,10 @@ library(lme4)
 
 all_data <- readRDS("D:/flux_db/metaanalysis_SF_OTC/database/database.rds")$fluxdata
 
+all_data <- all_data %>% 
+  mutate(treatment = ifelse(treatment == "sf", "SNOWFENCE",
+                            ifelse(treatment == "ctl", "CTL",treatment)))
 
-unique(all_data$site_id_automatic)
 
 working_data <- all_data %>% 
   filter(!is.na(reco)) %>% 
