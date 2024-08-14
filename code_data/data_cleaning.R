@@ -16,34 +16,39 @@ library(lme4)
 #full_data_wrong_units <- read_csv("full_data_wrong_units.csv", 
 #                                  col_types = cols(...1 = col_skip(), flux_date = col_date(format = "%d/%m/%Y")))
 
-all_data <- readRDS("database/database.rds")$fluxdata
+##flux data
+flux_data <- readRDS("database/database.rds")$fluxdata
 
 
-all_data <- all_data %>% 
+flux_data <- flux_data %>% 
   mutate(treatment = ifelse(treatment == "sf", "SNOWFENCE",
                             ifelse(treatment == "ctl", "CTL",treatment)))
 
+colnames(flux_data) <- gsub("_automatic","", colnames(flux_data))
+flux_data <- flux_data %>%
+  mutate(flux_date = parse_date_time(flux_date, orders = c("ymd", "mdy", "dmy")))
+
+##site data
 site_data <- readRDS("database/database.rds")$sitedata
-
-
-
-working_data <- all_data %>% 
-  filter(!is.na(reco)) %>% 
-  filter(treatment %in% c("CTL", "OTC","SNOWFENCE","OTCxSNOWFENCE")) %>% 
-  filter(site_id_automatic != "AUS_1")  
-
-
-
-#working_data <- working_data %>%
-#    mutate(flux_date = parse_date_time(flux_date, orders = c("ymd", "mdy", "dmy")))
-
-colnames(working_data) <- gsub("_automatic","", colnames(working_data))
-
 site_data$year <- as.numeric(site_data$year)
 site_data <- site_data[!duplicated(site_data[,c(1,2)]),]
+## method data
+method_data <- readRDS("database/database.rds")$methoddata
+method_data$year<-as.numeric(method_data$year)
 
-working_data <- working_data %>%
+## merge flux and site data
+working_data <- flux_data %>%
   dplyr::left_join(site_data, by = c("site_id" = "site_id", "flux_year" = "year"))
+
+#merge method data
+working_data_methods <- working_data %>%
+  dplyr::left_join(method_data, by = c("site_id" = "site_id", "flux_year" = "year"))
+
+working_data <- working_data %>% 
+  filter(!is.na(reco)) %>% 
+  filter(treatment %in% c("CTL", "OTC","SNOWFENCE","OTCxSNOWFENCE")) %>% 
+  filter(site_id!= "AUS_1") 
+
 
 outlierremoval <- working_data %>% 
   group_by(site_id,flux_year) %>% 
