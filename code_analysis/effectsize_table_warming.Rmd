@@ -70,6 +70,8 @@ source("code_data/data_cleaning.R") # get up-to date dataset
 ```
 
 ```{r calculate N, mean and sd}
+GRE_1->subset(working_data, site_id=="GRE_1",)
+
 
 check<- working_data %>% 
   filter(!is.na(reco)) %>% 
