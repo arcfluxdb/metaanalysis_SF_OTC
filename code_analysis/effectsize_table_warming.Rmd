@@ -12,6 +12,8 @@ knitr::opts_chunk$set(echo = TRUE)
 setwd("~/1_projects and publications/4_flux data/1_winter flux data/1_R/winter flux/metaanalysis_SF_OTC")
 source("code_data/data_cleaning.R") # get up-to date dataset
 
+working_data$month <- month(working_data$flux_date)
+
 # file.exists("data_cleaning.R")
 # 
 # all_data <- readRDS("database/database.rds")$fluxdata
@@ -70,8 +72,9 @@ source("code_data/data_cleaning.R") # get up-to date dataset
 ```
 
 ```{r calculate N, mean and sd}
-GRE_1->subset(working_data, site_id=="GRE_1",)
-
+GRE_1<-subset(flux_data, site_id=="GRE_1",)
+#only 2013, 2014
+#missing data from GRE_2 years 2015, 2017, 2018, 2019, 2020
 
 check<- working_data %>% 
   filter(!is.na(reco)) %>% 
@@ -214,6 +217,20 @@ result_table <- working_data %>%
 
 print(result_table)
 #write.csv(result_table, "data_overview.csv")
+
+working_data$soil_temp<- as.numeric(working_data$soil_temp)
+
+explain<- inner_join(working_data,effect_sizes ,by = c("site_id", "flux_year","flux_id", "month"), suffix =c("",""))
+```
+
+
+```{r regressions vegetation}
+res1<-rma.mv(yi, vi, 
+                   mods = ~soil_temp,
+                random=list(~ 1 | site_id, 
+                            ~ flux_year | site_id), 
+                struct="CAR", 
+                data=subset(explain, treatment_tr=="SNOWFENCE"))
 ```
 
 # run multivariate effects model
@@ -226,10 +243,28 @@ model_all<- rma.mv(yi, vi,
                             ~ flux_year | site_id), 
                 struct="CAR", 
                 data=effect_sizes)
-summary(SF_total)
+summary(model_all)
 forest(SF_total)
 predict(SF_total)
 
+## Site-level Variance (sigma^2):
+# Estimate (estim): 0.0000
+# Standard deviation (sqrt): 0.0004
+# Number of levels (nlvls): 69
+# This indicates that the variance between the sites (site_id) is very close to zero, which suggests that the variability between different sites is negligible after accounting for other factors in the model.
+
+## Test for Residual Heterogeneity:
+# QE(df = 799) = 4416.7763, p-val < .0001
+# This test assesses whether there is significant residual heterogeneity in the model after accounting for the moderators. The p-value < .0001 suggests that there is significant residual heterogeneity, meaning that there are still factors contributing to variability that are not captured by the model.
+## Correlation (rho):
+#A high rho value (close to 1) suggests that the random effects within the same cluster (site and year) are highly correlated.
+
+##Conclusion:
+# Model Fit: The significant residual heterogeneity (QE) suggests that while the model is capturing some of the variability, there is still unaccounted variability that might be due to unmeasured moderators or other factors.
+# 
+# Moderators: The model’s moderators are highly significant (QM test), meaning they are important in explaining the variability in the data.
+# 
+# Unbalanced Groups: Although your groups are unbalanced, the high significance levels of the treatment effects suggest that the model is robust enough to detect differences despite the imbalance.
 
 library(emmeans)
 #posthoc
@@ -262,6 +297,8 @@ orchard_plot(model_results, mod = "treatment_tr", transfm = "none",
         legend.title = element_text(size =10),
         legend.text = element_text(size = 10))
 
+# In a meta-analysis, a prediction interval provides a range within which the true effect size of a new study is expected to fall, given the variability observed in the meta-analysis. Unlike a confidence interval, which reflects uncertainty about the mean effect size, the prediction interval accounts for both the uncertainty in the mean and the between-study heterogeneity.
+
 ```
 
 #SF
@@ -277,8 +314,8 @@ summary(SF_total)
 forest(SF_total)
 predict(SF_total)
 
-sf_effect_sizes$site_id <- as.factor(sf_effect_sizes$site_id)
-SF_na <- sf_effect_sizes[complete.cases(sf_effect_sizes$yi_sf), ]
+# sf_effect_sizes$site_id <- as.factor(sf_effect_sizes$site_id)
+# SF_na <- sf_effect_sizes[complete.cases(sf_effect_sizes$yi_sf), ]
 #orchard plot
 model_results_SF <- orchaRd::mod_results(SF_total, mod = "1", group="site_id", data=effect_sizes)
 
@@ -364,9 +401,9 @@ orchard_plot(model_results_OTC_SF, mod = "1", transfm = "none",
              xlab = "Ecosystem Respiration SMD",
              trunk.size = 0.8)+
   scale_fill_manual(
-    values = c("darkgrey")) +
+    values = c("steelblue")) +
   scale_color_manual(
-    values = c("darkgrey")) +
+    values = c("steelblue")) +
   theme_void()+
   theme(text = element_text(family = "sans"),
         axis.text = element_text(size = 13),
