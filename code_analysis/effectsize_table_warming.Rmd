@@ -223,16 +223,6 @@ working_data$soil_temp<- as.numeric(working_data$soil_temp)
 explain<- inner_join(working_data,effect_sizes ,by = c("site_id", "flux_year","flux_id", "month"), suffix =c("",""))
 ```
 
-
-```{r regressions vegetation}
-res1<-rma.mv(yi, vi, 
-                   mods = ~soil_temp,
-                random=list(~ 1 | site_id, 
-                            ~ flux_year | site_id), 
-                struct="CAR", 
-                data=subset(explain, treatment_tr=="SNOWFENCE"))
-```
-
 # run multivariate effects model
 
 ```{r treatment comparison}
